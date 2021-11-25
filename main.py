@@ -142,18 +142,21 @@ T1_acc = df_updated_results[df_updated_results['Result']=='Target Achieved'].sha
 SL_acc = df_updated_results[df_updated_results['Result']=='SL Hit'].shape[0] / df_updated_results.shape[0] * 100
 sideways_acc = df_updated_results[df_updated_results['Result']=='Sideways'].shape[0] / df_updated_results.shape[0] * 100
 NoD_avg = df_updated_results[df_updated_results['Result']=='Target Achieved']['NoD'].mean()
+
 string = f"""
 
 # # # # # # # # # # # # # # # # # # # #
-date = {today}
+date = '{today}'
 # # # # # # # # # # # # # # # # # # # #
 
-T1 = {T1_acc}
-SL = {SL_acc}
-sideways = {sideways_acc}
-NoD_avg_T1 = {NoD_avg}
+T1 = {round(T1_acc, 2)}
+SL = {round(SL_acc, 2)}
+sideways = {round(sideways_acc, 2)}
+NoD_avg_T1 = {round(NoD_avg, 2)}
          
          """
 
 with open('log.py', 'a') as file:
         file.write(string)
+
+client.disconnect()                       
