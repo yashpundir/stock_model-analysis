@@ -1,4 +1,4 @@
-from log import last_id
+from last_id import last_id
 from datetime import datetime as dt
 import asyncio
 import configparser
@@ -126,10 +126,10 @@ df_updated_results = pd.concat([df_recent_results, df_results])       # merge re
 df_updated_results.to_excel('Result.xlsx', index=False)
 
 
-# update log file to maintain ID of most recent msg to use it as min_id parameter next time when the script is run.
+# update last_id file to maintain ID of most recent msg to use it as min_id parameter next time when the script is run.
 last_id = anchor_ids[0]
 today = dt.today()
-with open('log.py', 'w') as file:
+with open('last_id.py', 'w') as file:
     file.write(f"last_id = {last_id}\nlast_updated = '{today}'")
 
 
@@ -142,17 +142,17 @@ NoD_avg = df_updated_results[df_updated_results['Result']=='Target Achieved']['N
 string = f"""
 
 # # # # # # # # # # # # # # # # # # # #
-date = '{today}'
+date = {today}
 # # # # # # # # # # # # # # # # # # # #
 
-T1 = {round(T1_acc, 2)}
-SL = {round(SL_acc, 2)}
-sideways = {round(sideways_acc, 2)}
-NoD_avg_T1 = {round(NoD_avg, 2)}
+T1 = {round(T1_acc, 2)} %
+SL = {round(SL_acc, 2)} %
+sideways = {round(sideways_acc, 2)} %
+NoD_avg_T1 = {round(NoD_avg, 2)} days
          
          """
 
-with open('log.py', 'a') as file:
+with open('log.txt', 'a') as file:
         file.write(string)
 
 client.disconnect()                       
