@@ -8,11 +8,6 @@ from telethon.tl.functions.messages import GetHistoryRequest
 from utils import get_results
 
 
-# Create a backup of current data before proceeding further
-df_old = pd.read_excel('stock data.xlsx')
-df_old.to_excel('backup stock data.xlsx', index=False)
-
-
 # Reading Configs
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -121,14 +116,15 @@ df_recent['T3'] = df_recent['T3'].astype(float)
 df_recent['T4'] = df_recent['T4'].astype(float)
 
 # Manage excels
-df_results = pd.read_excel('Result.xlsx')                # load already existing results on previous data
-df_recent_results = get_results(df_recent)               # Get results for recent data
+# Create a backup of current data before proceeding further
+df_results = pd.read_excel('Result.xlsx')                             # load already existing results on previous data
+df_results.to_excel('backup stock data.xlsx', index=False)
+
+df_recent_results = get_results(df_recent)                            # Get results for recent data
 
 df_updated_results = pd.concat([df_recent_results, df_results])       # merge recent & old results
 df_updated_results.to_excel('Result.xlsx', index=False)
 
-df_updated = pd.concat([df_recent, df_old])                           # merge recent & old stock data
-df_updated.to_excel('stock data.xlsx', index=False)
 
 # update log file to maintain ID of most recent msg to use it as min_id parameter next time when the script is run.
 last_id = anchor_ids[0]
