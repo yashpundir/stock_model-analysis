@@ -1,62 +1,53 @@
-from last_id import last_id
+from last_id import free_last_id, paid_last_id
 from datetime import datetime as dt
-import asyncio
 import configparser
 import pandas as pd 
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetHistoryRequest
-from utils import get_results
+import utils
 
 
 # Reading Configs
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read("default/config.ini")
 
 # Setting configuration values
 api_id = config['Telegram']['api_id']
-api_hash = str(config['Telegram']['api_hash'])
-phone = config['Telegram']['phone']
+api_hash = config['Telegram']['api_hash']
 username = config['Telegram']['username']
 
 # Create client and connect to API
 client = TelegramClient(username, api_id, api_hash)
 client.start()
 
-user_input_channel = 'https://t.me/SRStockAlertBot'                    #channel link
-loop = asyncio.get_event_loop()                                        
+user_input_channel = 'https://t.me/SRStockAlertBot'                    #channel link                                       
 
-# Get channel ID
+# Get channel entity
 def getentity():
     return client.get_entity(user_input_channel)
-task1 = loop.create_task(getentity())
-my_channel = loop.run_until_complete(task1)
+my_channel = client.loop.run_until_complete(getentity())
 
 # Variables & Parameters
-offset_id = 0
-min_id = last_id
-limit = 100
 all_messages = []
-total_messages = 0
-total_count_limit = 500
 anchor_ids = []
+offset_id = 0
+total_messages = 0
 
-# Function to fetch messages 
+# Function to fetch messages (main function)
 def get_history(offset_id):
     return client(GetHistoryRequest(
         peer=my_channel,
         offset_id=offset_id,
         offset_date=None,
         add_offset=0,
-        limit=limit,
+        limit=100,
         max_id=0,
-        min_id=min_id,
+        min_id=free_last_id,
         hash=0
     ))
 
-# Fetch all msgs since this script last ran, up untill today and store it in all_messages.
 while True:
-    task2 = loop.create_task(get_history(offset_id))
-    history = loop.run_until_complete(task2)
+    history = client.loop.run_until_complete(get_history(offset_id))
 
     if not history.messages:
         break
@@ -70,8 +61,7 @@ while True:
     
     total_messages = len(all_messages)
     print("offset id:", offset_id, "; Total Messages:", total_messages)
-    if total_count_limit != 0 and total_messages >= total_count_limit:  
-        break
+    
 
 # For convinience to fetch Stoploss.
 all_Messages = []
@@ -84,13 +74,13 @@ for i in all_Messages:
     values = []
     for j in i:
         if j in ['What:', 'Time:', 'Stock:', 'Price:',  'Above', 'Target:']:
-            if j=='Target:':                                    # Upto 4 targets
-                targets = i[i.index(j)+1 : i.index(j)+5]
+            if j=='Target:':                                    # Upto 3 targets
+                targets = i[i.index(j)+1 : i.index(j)+4]
                 targets = [t.replace(',','') for t in targets]
 
-                if 'RS:' in targets:                            # If targets < 4, 'RS:' will crop up in targets, need to remove that.
+                if 'RS:' in targets:                            # If targets < 3, 'RS:' will crop up in targets, need to remove that.
                     targets = targets[:targets.index('RS:')]
-                    targets.extend([None for x in range(4-len(targets))])  # Pad targets with None if targets < 4
+                    targets.extend([None for x in range(3-len(targets))])  # Pad targets with None if targets < 3
                 
                 values.extend(targets)
 
@@ -102,7 +92,8 @@ for i in all_Messages:
 
 
 # Format df
-df_recent = pd.DataFrame(all_values, columns = ['Type', 'Date', 'Stock', 'Price', 'SL1', 'SL2', 'T1', 'T2', 'T3','T4'])
+df_recent = pd.DataFrame(all_values, columns = ['Type', 'Date', 'Stock', 'Price', 'SL1', 'SL2', 'T1', 'T2', 'T3'])
+df_recent.insert(0, 'What', df_recent['Type'].str[:-8])
 df_recent['Date'] = pd.to_datetime(df_recent['Date'], format='%d/%m/%Y')
 df_recent['Type'] = df_recent['Type'].str[-7:]
 df_recent['Stock'] = df_recent['Stock'].str.replace('#', '')
@@ -113,46 +104,27 @@ df_recent['SL2'] = df_recent['SL2'].astype(float)
 df_recent['T1'] = df_recent['T1'].astype(float)
 df_recent['T2'] = df_recent['T2'].astype(float)
 df_recent['T3'] = df_recent['T3'].astype(float)
-df_recent['T4'] = df_recent['T4'].astype(float)
 
-# Manage excels
-# Create a backup of current data before proceeding further
-df_results = pd.read_excel('Result.xlsx')                             # load already existing results on previous data
-df_results.to_excel('backup stock data.xlsx', index=False)
+# MANAGE EXCELS
 
-df_recent_results = get_results(df_recent)                            # Get results for recent data
+# Adding the previous 15 day data from current data to df_recent in order to be evaluated again
+backup = pd.read_excel('data/free channel/backup data.xlsx')
+day15data = backup[backup.Date>=backup.Date.unique()[:15][-1]]        # Get previous 15 day's data from current data
+backup = pd.concat([df_recent, backup])                               # update backup data with df_recent
+backup.to_excel('data/free channel/backup data.xlsx', index=False)
 
-df_updated_results = pd.concat([df_recent_results, df_results])       # merge recent & old results
-df_updated_results.to_excel('Result.xlsx', index=False)
+df_recent = pd.concat([df_recent, day15data])
+df_recent_results = utils.master(df_recent)                            # Get results for recent & previous 15 day data
 
+df_result = pd.read_excel('data/free channel/Result.xlsx') 
+df_result.drop(labels=range(day15data.shape[0]), axis=0, inplace=True)    # Drop previous 15 day data from current data
+df_updated_results = pd.concat([df_recent_results, df_result])            # merge recent & old results
+df_updated_results.to_excel('data/free channel/Result.xlsx', index=False)
 
 # update last_id file to maintain ID of most recent msg to use it as min_id parameter next time when the script is run.
 last_id = anchor_ids[0]
 today = dt.today()
 with open('last_id.py', 'w') as file:
-    file.write(f"last_id = {last_id}\nlast_updated = '{today}'")
+    file.write(f"free_last_id = {last_id}\npaid_last_id = {paid_last_id}\nlast_updated = '{today}'")
 
-
-# Update log file with today's results
-T1_acc = df_updated_results[df_updated_results['Result']=='Target Achieved'].shape[0] / df_updated_results.shape[0] * 100
-SL_acc = df_updated_results[df_updated_results['Result']=='SL Hit'].shape[0] / df_updated_results.shape[0] * 100
-sideways_acc = df_updated_results[df_updated_results['Result']=='Sideways'].shape[0] / df_updated_results.shape[0] * 100
-NoD_avg = df_updated_results[df_updated_results['Result']=='Target Achieved']['NoD'].mean()
-
-string = f"""
-
-# # # # # # # # # # # # # # # # # # # #
-date = {today}
-# # # # # # # # # # # # # # # # # # # #
-
-T1 = {round(T1_acc, 2)} %
-SL = {round(SL_acc, 2)} %
-sideways = {round(sideways_acc, 2)} %
-NoD_avg_T1 = {round(NoD_avg, 2)} days
-         
-         """
-
-with open('log.txt', 'a') as file:
-        file.write(string)
-
-client.disconnect()                       
+client.disconnect()        
