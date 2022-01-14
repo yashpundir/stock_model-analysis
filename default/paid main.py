@@ -109,23 +109,25 @@ df_recent['T3'] = df_recent['T3'].astype(float)
 # MANAGE EXCELS
 
 # Adding the previous 15 day data from current data to df_recent in order to be evaluated again
-backup = pd.read_excel('data/paid channel/backup data.xlsx')
+backup = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/paid channel/backup data.xlsx')
 day15data = backup[backup.Date>=backup.Date.unique()[:15][-1]]        # Get previous 15 day's data from current data
 backup = pd.concat([df_recent, backup])                               # update backup data with df_recent
-backup.to_excel('data/paid channel/backup data.xlsx', index=False)
+backup.to_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/paid channel/backup data.xlsx', index=False)
 
 df_recent = pd.concat([df_recent, day15data])
 df_recent_results = utils.master(df_recent)                            # Get results for recent & previous 15 day data
+result_dummy = ['Target achieved' if x in ['T1','T2','T3'] else x for x in df_recent_results.Result]
+df_recent_results.insert(df_recent_results.shape[1], 'result dummy', result_dummy)
 
-df_result = pd.read_excel('data/paid channel/Result.xlsx') 
+df_result = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/paid channel/Result.xlsx') 
 df_result.drop(labels=range(day15data.shape[0]), axis=0, inplace=True)    # Drop previous 15 day data from current data
 df_updated_results = pd.concat([df_recent_results, df_result])            # merge recent & old results
-df_updated_results.to_excel('data/paid channel/Result.xlsx', index=False)
+df_updated_results.to_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/paid channel/Result.xlsx', index=False)
 
 # update last_id file to maintain ID of most recent msg to use it as min_id parameter next time when the script is run.
 last_id = anchor_ids[0]
 today = dt.today()
-with open('last_id.py', 'w') as file:
+with open('D:/Yash/Python Projects/tgm_stk_tkr/default/last_id.py', 'w') as file:
     file.write(f"free_last_id = {free_last_id}\npaid_last_id = {last_id}\nlast_updated = '{today}'")
 
 client.disconnect()
