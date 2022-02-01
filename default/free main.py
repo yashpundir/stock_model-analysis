@@ -105,7 +105,7 @@ df_recent['T1'] = df_recent['T1'].astype(float)
 df_recent['T2'] = df_recent['T2'].astype(float)
 df_recent['T3'] = df_recent['T3'].astype(float)
 
-# MANAGE EXCELS
+# MANAGE EXCEL
 
 # Adding the previous 15 day data from current data to df_recent in order to be evaluated again
 backup = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/free channel/backup data.xlsx')
