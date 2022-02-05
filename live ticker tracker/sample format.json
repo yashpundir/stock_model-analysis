@@ -1,0 +1,78 @@
+{
+    "alerts": [
+        {
+            "what": "FO_Bullish",
+            "trigger_time": "09/01/2022",
+            "stock": "POLYCAB",
+            "trigger_price": 2466.4,
+            "stoploss": 2416.91,
+            "target": 2540.39,
+            "expiry_data": [
+                {
+                    "27JAN2022": {
+                        "lot_size": 300,
+                        "strategy1": {
+                            "symbol1": {
+                                "symbol-name": "POLYCAB22JAN2500PE",
+                                "trade-type": "Buy",
+                                "strike-price": 2500,
+                                "ins-price": 101.9
+                            },
+                            "symbol2": {
+                                "symbol-name": "POLYCAB22JANFUT",
+                                "trade-type": "Buy",
+                                "ins-price": 2483.85
+                            }
+                        },
+                        "strategy2": {
+                            "symbol1": {
+                                "symbol-name": "POLYCAB22JAN2400CE",
+                                "trade-type": "Buy",
+                                "strike-price": 2400,
+                                "ins-price": 130.2
+                            },
+                            "symbol2": {
+                                "symbol-name": "POLYCAB22JAN2600CE",
+                                "trade-type": "Sell",
+                                "strike-price": 2600,
+                                "ins-price": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "24FEB2022": {
+                        "lot_size": 300,
+                        "strategy1": {
+                            "symbol1": {
+                                "symbol-name": "POLYCAB22FEB2500PE",
+                                "trade-type": "Buy",
+                                "strike-price": 2500,
+                                "ins-price": 0
+                            },
+                            "symbol2": {
+                                "symbol-name": "POLYCAB22FEBFUT",
+                                "trade-type": "Buy",
+                                "ins-price": 2490.95
+                            }
+                        },
+                        "strategy2": {
+                            "symbol1": {
+                                "symbol-name": "POLYCAB22FEB2400CE",
+                                "trade-type": "Buy",
+                                "strike-price": 2400,
+                                "ins-price": 0
+                            },
+                            "symbol2": {
+                                "symbol-name": "POLYCAB22FEB2600CE",
+                                "trade-type": "Sell",
+                                "strike-price": 2600,
+                                "ins-price": 0
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
