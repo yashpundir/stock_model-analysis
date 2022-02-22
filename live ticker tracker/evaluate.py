@@ -31,14 +31,14 @@ def master(df):
         if row["Status"]!='Expired':
         
             if row['Type']=='Bullish':
-                get_bull(ind, row, today)
+                get_bull(df, ind, row, today)
 
             else:
-                get_bear(ind, row, today)
+                get_bear(df, ind, row, today)
 
 # candles = [tstmp O H L C V]
                 
-def get_bull(ind, row, today):
+def get_bull(df, ind, row, today):
     # Get data 
     hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                              "cont_flag":"1"}
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
@@ -64,9 +64,9 @@ def get_bull(ind, row, today):
     
     # update if alert is active
     if row['Status']=='ACTIVE':
-        evaluate_active_bull(ind, row, sres, ores, fres)
+        evaluate_active_bull(df, ind, row, sres, ores, fres)
         
-def evaluate_active_bull(ind, row, sres, ores, fres):
+def evaluate_active_bull(df, ind, row, sres, ores, fres):
     
     # check/update status
     if sres[2] >= row['T1']:                                                       # [2] => high_price
@@ -90,7 +90,7 @@ def evaluate_active_bull(ind, row, sres, ores, fres):
 
     df.loc[ind, 'Total P&L'] = df.loc[ind, 'P&L OPT'] + df.loc[ind, 'P&L FUT']     # Update Total P&L
     
-def get_bear(ind, row, today):
+def get_bear(df, ind, row, today):
     # Get data 
     hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                              "cont_flag":"1"}
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
@@ -116,9 +116,9 @@ def get_bear(ind, row, today):
     
     # update if alert is active
     if row['Status']=='ACTIVE':
-        evaluate_active_bear(ind, row, sres, ores, fres)
+        evaluate_active_bear(df, ind, row, sres, ores, fres)
         
-def evaluate_active_bear(ind, row, sres, ores, fres):
+def evaluate_active_bear(df, ind, row, sres, ores, fres):
     
     # check/update status
     if sres[3] <= row['T1']:                                       # [3] => low_price 
@@ -153,12 +153,12 @@ def Master(df):
         if row["Status"]!='Expired':
         
             if row['Type']=='Bullish':
-                Get_bull(ind, row, today)
+                Get_bull(df, ind, row, today)
 
             else:
-                Get_bear(ind, row, today)
+                Get_bear(df, ind, row, today)
                 
-def Get_bull(ind, row, today):
+def Get_bull(df, ind, row, today):
     # Get data 
     hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                              "cont_flag":"1"}
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT1']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
@@ -184,9 +184,9 @@ def Get_bull(ind, row, today):
     
     # update if alert is active
     if row['Status']=='ACTIVE':
-        Evaluate_active_bull(ind, row, sres, ores, o2res)
+        Evaluate_active_bull(df, ind, row, sres, ores, o2res)
         
-def Evaluate_active_bull(ind, row, sres, ores, o2res):
+def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
     
     # check/update status
     if sres[2] >= row['T1']:                                                       # [2] => high_price
@@ -210,7 +210,7 @@ def Evaluate_active_bull(ind, row, sres, ores, o2res):
 
     df.loc[ind, 'Total P&L'] = df.loc[ind, 'P&L OPT1'] + df.loc[ind, 'P&L OPT2']        
         
-def Get_bear(ind, row, today):
+def Get_bear(df, ind, row, today):
     # Get data 
     hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                              "cont_flag":"1"}
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT1']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
@@ -236,9 +236,9 @@ def Get_bear(ind, row, today):
     
     # update if alert is active
     if row['Status']=='ACTIVE':
-        Evaluate_active_bear(ind, row, sres, ores, o2res)
+        Evaluate_active_bear(df, ind, row, sres, ores, o2res)
         
-def Evaluate_active_bear(ind, row, sres, ores, o2res):
+def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
     
     # check/update status
     if sres[3] <= row['T1']:                                       # [3] => low_price 

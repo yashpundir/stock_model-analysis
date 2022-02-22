@@ -21,7 +21,7 @@ master(df)                                                                      
 push_changes(sheet1, df)
 
 # STRATEGY 2
-df2 = get_active_data(d2)                                                        # Remove already Expired alerts
-update_status(df2)                                                               # Check for Expired alerts and update them, if any
-Master(d2)                                                                       # Evaluate all alerts
+df2 = get_active_data(df2)                                                        # Remove already Expired alerts
+update_status(df2)                                                                # Check for Expired alerts and update them, if any
+Master(df2)                                                                       # Evaluate all alerts
 push_changes(sheet2, df2)

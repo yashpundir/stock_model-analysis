@@ -1,6 +1,7 @@
+*__pycache__
+*.ipynb_checkpoints 
 default/config.ini
 default/Yash\ Pundir.session
 default/Analysis.docx
-personal/
 live\ ticker\ tracker/config.ini
 live\ ticker\ tracker/creds.json
