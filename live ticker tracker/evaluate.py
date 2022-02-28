@@ -47,12 +47,16 @@ def get_bull(df, ind, row, today):
     ho = fyers.history(ho_data)
     hf = fyers.history(hf_data)
 
-#     try:
-    sres = hs['candles'][-1]
-    ores = ho['candles'][-1]
-    fres = hf['candles'][-1]
-#     except:
-#         print(f"api response not ok for Trade ID {row['Trade ID']}")
+    try:
+        if dt.time(4, 0) < dt.datetime.now().time() < dt.time(9, 55):
+            i = -2
+        else:
+            i = -1
+        sres = hs['candles'][i]
+        ores = ho['candles'][i]
+        fres = hf['candles'][i]
+    except:
+        print(f"api response not ok for Trade ID {row['Trade ID']}")
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4]
@@ -102,12 +106,16 @@ def get_bear(df, ind, row, today):
     ho = fyers.history(ho_data)
     hf = fyers.history(hf_data)
 
-#     try:
-    sres = hs['candles'][-1]
-    ores = ho['candles'][-1]
-    fres = hf['candles'][-1]
-#     except:
-#         print(f"api response not ok for Trade ID {row['Trade ID']}")
+    try:
+        if dt.time(4, 0) < dt.datetime.now().time() < dt.time(9, 55):
+            i = -2
+        else:
+            i = -1
+        sres = hs['candles'][i]
+        ores = ho['candles'][i]
+        fres = hf['candles'][i]
+    except:
+        print(f"api response not ok for Trade ID {row['Trade ID']}")
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4] 
@@ -173,12 +181,16 @@ def Get_bull(df, ind, row, today):
     ho = fyers.history(ho_data)
     hf = fyers.history(hf_data)
 
-#     try:
-    sres = hs['candles'][-1]
-    ores = ho['candles'][-1]
-    o2res = hf['candles'][-1]
-#     except:
-#         print(f"api response not ok for Trade ID {row['Trade ID']}")
+    try:
+        if dt.time(4, 0) < dt.datetime.now().time() < dt.time(9, 55):
+            i = -2
+        else:
+            i = -1
+        sres = hs['candles'][i]
+        ores = ho['candles'][i]
+        o2res = hf['candles'][i]
+    except:
+        print(f"api response not ok for Trade ID {row['Trade ID']}")
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4]
@@ -228,12 +240,16 @@ def Get_bear(df, ind, row, today):
     ho = fyers.history(ho_data)
     hf = fyers.history(hf_data)
 
-#     try:
-    sres = hs['candles'][-1]
-    ores = ho['candles'][-1]
-    o2res = hf['candles'][-1]
-#     except:
-#         print(f"api response not ok for Trade ID {row['Trade ID']}")
+    try:
+        if dt.time(4, 0) < dt.datetime.now().time() < dt.time(9, 55):
+            i = -2
+        else:
+            i = -1
+        sres = hs['candles'][i]
+        ores = ho['candles'][i]
+        o2res = hf['candles'][i]
+    except:
+        print(f"api response not ok for Trade ID {row['Trade ID']}")
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4] 
