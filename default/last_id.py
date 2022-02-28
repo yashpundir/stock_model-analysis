@@ -1,3 +1,3 @@
-free_last_id = 1039
-paid_last_id = 558
-last_updated = '2022-01-31 23:45:50.961276'
+free_last_id = 1067
+paid_last_id = 634
+last_updated = '2022-02-28 18:48:34.477361'

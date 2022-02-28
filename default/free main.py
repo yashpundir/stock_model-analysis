@@ -9,7 +9,7 @@ import utils
 
 # Reading Configs
 config = configparser.ConfigParser()
-config.read("default/config.ini")
+config.read("D:/Yash/Python Projects/tgm_stk_tkr/default/config.ini")
 
 # Setting configuration values
 api_id = config['Telegram']['api_id']
