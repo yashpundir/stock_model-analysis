@@ -1,6 +1,7 @@
 import datetime as dt
 from fyers_api import fyersModel
 import configparser
+import time
 
 # FYERS API AUTHENTICATION
 # Reading Configs
@@ -44,7 +45,9 @@ def get_bull(df, ind, row, today):
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hf_data = {"symbol": f"NSE:{row['Ticker Name FUT']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hs = fyers.history(hs_data)
+    time.sleep(0.25)
     ho = fyers.history(ho_data)
+    time.sleep(0.25)
     hf = fyers.history(hf_data)
 
     try:
@@ -103,7 +106,9 @@ def get_bear(df, ind, row, today):
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hf_data = {"symbol": f"NSE:{row['Ticker Name FUT']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hs = fyers.history(hs_data)
+    time.sleep(0.25)
     ho = fyers.history(ho_data)
+    time.sleep(0.25)
     hf = fyers.history(hf_data)
 
     try:
@@ -178,7 +183,9 @@ def Get_bull(df, ind, row, today):
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT1']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hf_data = {"symbol": f"NSE:{row['Ticker Name OPT2']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hs = fyers.history(hs_data)
+    time.sleep(0.25)
     ho = fyers.history(ho_data)
+    time.sleep(0.25)
     hf = fyers.history(hf_data)
 
     try:
@@ -237,7 +244,9 @@ def Get_bear(df, ind, row, today):
     ho_data = {"symbol": f"NSE:{row['Ticker Name OPT1']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hf_data = {"symbol": f"NSE:{row['Ticker Name OPT2']}", "resolution":"15", "date_format":"1", "range_from":today, "range_to":today,                      "cont_flag":"1"}
     hs = fyers.history(hs_data)
+    time.sleep(0.25)
     ho = fyers.history(ho_data)
+    time.sleep(0.25)
     hf = fyers.history(hf_data)
 
     try:
