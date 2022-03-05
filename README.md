@@ -1,3 +1,6 @@
 # stock_model-analysis
-Analysis of the reliability/accuracy of the alerts provided by SRStockAlertBot
+Work related to 
 https://www.lambdaequitech.com/
+
+1. default - Report generation
+2. live ticker tracker - FnO live tracker
