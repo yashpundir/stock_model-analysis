@@ -18,7 +18,12 @@ def get_active_data(df):
 def update_status(df):
     for i, row in df.iterrows():
         if dt.date.today() == dt.datetime.strptime(row['Expiry'], '%d%b%Y').date():
-            df.loc[i, 'Status'] = 'Expired'
+            if row['Status'] == 'T1 Hit':
+                df.loc[i, 'Status'] = 'Expired-T1 Hit'
+            elif row['Status'] == 'SL Hit':
+                df.loc[i, 'Status'] = 'Expired-SL Hit'
+            else:
+                df.loc[i, 'Status'] = 'Expired-Stagnant'
 
 #--------------------------------------------------#
 # FOR STRATEGY 1                                   #
