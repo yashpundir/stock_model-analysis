@@ -295,7 +295,7 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
     
     # Calculate P&L
     if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='Strike 1':      # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT1'] = df.loc[ind, 'P&L OPT1(UE)']
+        df.loc[ind, 'P&L OPT1'] = df.loc[ind, 'P&L OPT1 (UE)']
         df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'P&L OPT2 (UE)']                 
 
     else:                                                                          # If T1/SL hit
