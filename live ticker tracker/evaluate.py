@@ -13,7 +13,7 @@ access_token = config['Fyers']['access_token']
 fyers = fyersModel.FyersModel(client_id=client_id, token=access_token, log_path="apiV2")         # Authorize
 
 def get_active_data(df):
-    return df[df.Status.isin(['ACTIVE','T1 Hit','SL Hit','Strike 1'])]
+    return df[df.Status.isin(['ACTIVE','T1 Hit','SL Hit','SL Zone'])]
 
 def update_status(df):
     for i, row in df.iterrows():
@@ -75,7 +75,7 @@ def get_bull(df, ind, row, today):
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='Strike 1':
+    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
         evaluate_active_bull(df, ind, row, sres, ores, fres)
         
 def evaluate_active_bull(df, ind, row, sres, ores, fres):
@@ -86,16 +86,16 @@ def evaluate_active_bull(df, ind, row, sres, ores, fres):
         df.loc[ind, 'Exit Price OPT'] = ores[3]                                    
         df.loc[ind, 'Exit Price FUT'] = fres[2]                                    
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] <= row['SL']):    # UTC time zone
-        if row['Status'] == 'ACTIVE':                                             # [4] => close
-            df.loc[ind, 'Status'] = 'Strike 1'                   
+    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] <= row['SL'] + row['SL']*0.01): # UTC time zone
+        if row['Status'] == 'ACTIVE':                                       # [4] => close     in 1% range of SL
+            df.loc[ind, 'Status'] = 'SL Zone'                   
         else:
             df.loc[ind, 'Status'] = 'SL Hit'
             df.loc[ind, 'Exit Price OPT'] = ores[2]
             df.loc[ind, 'Exit Price FUT'] = fres[3]                                     
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='Strike 1':       # If T1/SL is still not hit
+    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':       # If T1/SL is still not hit
         df.loc[ind, 'P&L OPT'] = df.loc[ind, 'P&L OPT (UE)']
         df.loc[ind, 'P&L FUT'] = df.loc[ind, 'P&L FUT (UE)']                  
 
@@ -136,7 +136,7 @@ def get_bear(df, ind, row, today):
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='Strike 1':
+    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
         evaluate_active_bear(df, ind, row, sres, ores, fres)
         
 def evaluate_active_bear(df, ind, row, sres, ores, fres):
@@ -147,16 +147,16 @@ def evaluate_active_bear(df, ind, row, sres, ores, fres):
         df.loc[ind, 'Exit Price OPT'] = ores[3]                    
         df.loc[ind, 'Exit Price FUT'] = fres[3]                    
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] >= row['SL']):    # UTC time zone
-        if row['Status'] == 'ACTIVE':                                             # [4] => close
-            df.loc[ind, 'Status'] = 'Strike 1'                   
+    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] >= row['SL'] - row['SL']*0.01):    # UTC time zone
+        if row['Status'] == 'ACTIVE':                                       # [4] => close    in 1% range of SL
+            df.loc[ind, 'Status'] = 'SL Zone'                   
         else:
             df.loc[ind, 'Status'] = 'SL Hit'
             df.loc[ind, 'Exit Price OPT'] = ores[2]
             df.loc[ind, 'Exit Price FUT'] = fres[2]                     
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='Strike 1':       # If T1/SL is still not hit
+    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':       # If T1/SL is still not hit
         df.loc[ind, 'P&L OPT'] = df.loc[ind, 'P&L OPT (UE)']
         df.loc[ind, 'P&L FUT'] = df.loc[ind, 'P&L FUT (UE)']                
 
@@ -213,7 +213,7 @@ def Get_bull(df, ind, row, today):
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT1 (UE)'] + df.loc[ind, 'P&L OPT2 (UE)']
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='Strike 1':
+    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
         Evaluate_active_bull(df, ind, row, sres, ores, o2res)
         
 def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
@@ -224,16 +224,16 @@ def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                                    
         df.loc[ind, 'Exit Price OPT2'] = o2res[2]                                    
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] <= row['SL']):    # UTC time zone
-        if row['Status'] == 'ACTIVE':                                             # [4] => close
-            df.loc[ind, 'Status'] = 'Strike 1'                   
+    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] <= row['SL'] + row['SL']*0.01):  # UTC time zone
+        if row['Status'] == 'ACTIVE':                                       # [4] => close       in 1% range of SL
+            df.loc[ind, 'Status'] = 'SL Zone'                   
         else:
             df.loc[ind, 'Status'] = 'SL Hit'
             df.loc[ind, 'Exit Price OPT1'] = ores[3]
             df.loc[ind, 'Exit Price OPT2'] = o2res[3]                                    
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='Strike 1':      # If T1/SL is still not hit
+    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':      # If T1/SL is still not hit
         df.loc[ind, 'P&L OPT1'] = df.loc[ind, 'P&L OPT1 (UE)']
         df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'P&L OPT2 (UE)']                  
 
@@ -274,7 +274,7 @@ def Get_bear(df, ind, row, today):
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT1 (UE)'] + df.loc[ind, 'P&L OPT2 (UE)']
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='Strike 1':
+    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
         Evaluate_active_bear(df, ind, row, sres, ores, o2res)
         
 def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
@@ -285,16 +285,16 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                     
         df.loc[ind, 'Exit Price OPT2'] = o2res[2]                    
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] >= row['SL']):    # UTC time zone
-        if row['Status'] == 'ACTIVE':                                             # [4] => close
-            df.loc[ind, 'Status'] = 'Strike 1'                   
+    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and (sres[4] >= row['SL'] - row['SL']*0.01): # UTC time zone
+        if row['Status'] == 'ACTIVE':                                       # [4] => close
+            df.loc[ind, 'Status'] = 'SL Zone'                   
         else:
             df.loc[ind, 'Status'] = 'SL Hit'
             df.loc[ind, 'Exit Price OPT1'] = ores[3]
             df.loc[ind, 'Exit Price OPT2'] = o2res[3]                     
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='Strike 1':      # If T1/SL is still not hit
+    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':      # If T1/SL is still not hit
         df.loc[ind, 'P&L OPT1'] = df.loc[ind, 'P&L OPT1 (UE)']
         df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'P&L OPT2 (UE)']                 
 
