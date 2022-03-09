@@ -180,3 +180,35 @@
 # OPT2   10:00|----------\/----------|10:15 pm (PROFIT)
 
 ########################################################################################################################
+
+-------SL Hit logic--------
+(Assuming Bullish Alert)
+Day 1
+-----
+SL - 1000
+Extended_SL - 1% - 990
+
+Check on day closing price
+
+- Price closed between 1000 and 990 - SL Zone
+- Price closed below 990 - SL Hit
+- Price above 1000 - Active
+
+
+Day 2
+------
+
+Check on 1st 30 min candle close
+
+- SL Zone carry forward from Day 1
+
+* Price still between 1000 and 990 - SL Zone remains in status
+* Price below 990 - SL Hit
+* Price above 1000 - SL Zone remains in status
+
+- Check on day closing price
+
+* Price still below 1000 - SL Hit
+* Price above 1000 - Active
+
+########################################################################################################################
