@@ -24,21 +24,28 @@ def update_status(df):
             else:
                 df.loc[i, 'Status'] = f"Expired-Stagnant"
 
-def fetch_candles(row, today):
+def fetch_candles(row, today, s):
     now = dt.datetime.today()
     if now.time() < dt.time(4, 20):
-        reso = 30
+      reso = 30
     else:
-        reso = 15
-
+      reso = 15
+    
+    if s==0:
+      symbol1 = row['Ticker Name OPT']
+      symbol2 = row['Ticker Name FUT']
+    else:
+      symbol1 = row['Ticker Name OPT1']
+      symbol2 = row['Ticker Name OPT2']
+    
     hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
-    hs1_data = {"symbol": f"NSE:{row['Ticker Name OPT']}", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
-    hs2_data = {"symbol": f"NSE:{row['Ticker Name FUT']}", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
-    hs = fyers.history(hs_data)
+    hs1_data = {"symbol": f"NSE:{symbol1}", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
+    hs2_data = {"symbol": f"NSE:{symbol2}", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
+    hs = fyers.history(hs_data)['candles']
     time.sleep(0.25)
-    hs1 = fyers.history(hs1_data)
+    hs1 = fyers.history(hs1_data)['candles']
     time.sleep(0.25)
-    hs2 = fyers.history(hs2_data)
+    hs2 = fyers.history(hs2_data)['candles']
 
     # Calculate the required epoch/candle
     mins = (now.minute - (now.minute % 15) - reso) % 60
@@ -115,7 +122,7 @@ def master(df):
                 
 def get_bull(df, ind, row, today):
     # Get data 
-    sres, ores, fres = fetch_candles(row, today)
+    sres, ores, fres = fetch_candles(row, today, 0)
 
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4]
@@ -156,7 +163,7 @@ def evaluate_active_bull(df, ind, row, sres, ores, fres):
     
 def get_bear(df, ind, row, today):
     # Get data 
-    sres, ores, fres = fetch_candles(row, today)
+    sres, ores, fres = fetch_candles(row, today, 0)
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4] 
@@ -212,7 +219,7 @@ def Master(df):
                 
 def Get_bull(df, ind, row, today):
     # Get data 
-    sres, ores, o2res = fetch_candles(row, today)
+    sres, ores, o2res = fetch_candles(row, today, 1)
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4]
@@ -252,7 +259,7 @@ def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
         
 def Get_bear(df, ind, row, today):
     # Get data 
-    sres, ores, o2res = fetch_candles(row, today)
+    sres, ores, o2res = fetch_candles(row, today, 1)
     
     # update common columns
     df.loc[ind, 'Stock CMP'] = sres[4] 
@@ -295,7 +302,7 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
 def push_changes(sheet, data):
     values = data.values.tolist()
     for value in values:
-        cell = sheet.find(str(value[0]), in_column=0)
+        cell = sheet.find(str(value[0]), in_column=1)
         a1 = cell.address
         r = cell.row
-        sheet.update(f"{a1}:AA{r}", [value])
+        sheet.update(f"{a1}:AC{r}", [value])
