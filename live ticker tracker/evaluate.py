@@ -3,6 +3,9 @@ from fyers_api import fyersModel
 import configparser
 import time
 import numpy as np
+import gspread_dataframe as gd
+import pandas as pd
+import logging
 
 # FYERS API AUTHENTICATION
 # Reading Configs
@@ -10,8 +13,10 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 client_id = config['Fyers']['client_id']
 access_token = config['Fyers']['access_token']
-
 fyers = fyersModel.FyersModel(client_id=client_id, token=access_token, log_path="apiV2")         # Authorize
+
+logging.basicConfig(filename='log.txt', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
+
 
 def get_active_data(df):
     return df[df.Status.isin(['ACTIVE','T1 Hit','SL Hit','SL Zone'])]
@@ -51,16 +56,15 @@ def fetch_candles(row, today, s):
     mins = (now.minute - (now.minute % 15) - reso) % 60
     hr = now.hour if mins < now.minute else now.hour - 1
     epoch = dt.datetime(now.year, now.month, now.day, hr, mins).timestamp()
+    #epoch = 1647337500.0                                                        03:15 candle for testing purpose
 
-    try:            # index the required candle
-        sres = hs[np.where(np.array(hs) == epoch)[0][0]]
-        s1res = hs1[np.where(np.array(hs1) == epoch)[0][0]]
-        s2res = hs2[np.where(np.array(hs2) == epoch)[0][0]]
-    except:
-        print(f"Candle index not found for trade ID{row['Trade ID']}. Check logs!")
+    # index the required candle
+    sres = hs[np.where(np.array(hs) == epoch)[0][0]]
+    s1res = hs1[np.where(np.array(hs1) == epoch)[0][0]]
+    s2res = hs2[np.where(np.array(hs2) == epoch)[0][0]]
 
     return sres, s1res, s2res
-
+        
 def check_bull_SL(row, sres, ind, df):
     extended_SL = row['SL'] - row['SL']*0.01                               # in 1% range of SL
 
@@ -77,10 +81,10 @@ def check_bull_SL(row, sres, ind, df):
         else:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(3, 45)) and row['Status']=='SL Zone':
+    elif row['Status']=='SL Zone':
         if sres[4] <= extended_SL:
             df.loc[ind, 'Status'] = 'SL Hit'
-
+    
 def check_bear_SL(row, sres, ind, df):
     extended_SL = row['SL'] + row['SL']*0.01
 
@@ -97,7 +101,7 @@ def check_bear_SL(row, sres, ind, df):
         else:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(3, 45)) and row['Status']=='SL Zone':
+    elif row['Status']=='SL Zone':
         if sres[4] >= extended_SL:
             df.loc[ind, 'Status'] = 'SL Hit'
 
@@ -110,13 +114,15 @@ def master(df):
     today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
     
     for ind, row in df.iterrows():
-        if row["Status"][:7]!='Expired':
-        
-            if row['Type']=='Bullish':
-                get_bull(df, ind, row, today)
-
-            else:
-                get_bear(df, ind, row, today)
+        try:
+            if row["Status"][:7]!='Expired':
+                if row['Type']=='Bullish':
+                    get_bull(df, ind, row, today)
+                else:
+                    get_bear(df, ind, row, today)
+        except IndexError as e:
+            logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
+            continue
 
 # candles = [tstmp O H L C V]
                 
@@ -131,6 +137,7 @@ def get_bull(df, ind, row, today):
     df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
     df.loc[ind, 'P&L FUT (UE)'] = (fres[4] - row['Entry Price FUT']) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
+    df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
     
     # update if alert is active
     if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
@@ -172,6 +179,7 @@ def get_bear(df, ind, row, today):
     df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
     df.loc[ind, 'P&L FUT (UE)'] = (row['Entry Price FUT'] - fres[4]) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
+    df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
     
     # update if alert is active
     if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
@@ -209,13 +217,15 @@ def Master(df):
     today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
     
     for ind, row in df.iterrows():
-        if row["Status"][:7]!='Expired':
-        
-            if row['Type']=='Bullish':
-                Get_bull(df, ind, row, today)
-
-            else:
-                Get_bear(df, ind, row, today)
+        try:
+            if row["Status"][:7]!='Expired':
+                if row['Type']=='Bullish':
+                    Get_bull(df, ind, row, today)
+                else:
+                    Get_bear(df, ind, row, today)
+        except IndexError as e:
+            logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
+            continue
                 
 def Get_bull(df, ind, row, today):
     # Get data 
@@ -299,10 +309,10 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
     df.loc[ind, 'Total P&L'] = df.loc[ind, 'P&L OPT1'] + df.loc[ind, 'P&L OPT2']        
         
 # Push updated data back to google sheets
-def push_changes(sheet, data):
-    values = data.values.tolist()
-    for value in values:
-        cell = sheet.find(str(value[0]), in_column=1)
-        a1 = cell.address
-        r = cell.row
-        sheet.update(f"{a1}:AC{r}", [value])
+def push_changes(sheet, df):
+    df_new = pd.DataFrame(sheet.get_all_records())
+    df_new = get_active_data(df_new)                                                  # Remove the expired alerts
+    offset = df_new.shape[0] - df.shape[0]                                            # Look for any new rows
+    if offset>0:
+        logging.info(f"Found {offset} new entries before pushing to {sheet.title}; {df_new.iloc[np.arange(offset), 1].values.tolist()}\nPushing from GS row {2+offset}.\n")
+    gd.set_with_dataframe(sheet, df, row=2+offset, col=1, include_column_header=False)

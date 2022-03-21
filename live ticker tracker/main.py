@@ -14,10 +14,10 @@ if fyers.get_profile()['message'] != message:
     # STRATEGY 1
     sheet1 = gc.open('FnO_Tracker').sheet1                                           # Get Sheet 1 (Strategy 1)
     df = pd.DataFrame(sheet1.get_all_records())                                      # convert sheet to pandas df
-    
+
     df = get_active_data(df)                                                         # Remove already Expired alerts
     update_status(df)                                                                # Check for Expired alerts and update them, if any
-    master(df)                                                                       # Evaluate all alerts
+    master(df)                                                                       # Evaluate all alerts                                                                
     push_changes(sheet1, df)
 
     # STRATEGY 2

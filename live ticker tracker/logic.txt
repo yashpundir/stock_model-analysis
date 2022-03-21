@@ -197,10 +197,9 @@ Check on day closing price
 
 Day 2
 ------
-
-Check on 1st 30 min candle close
-
 - SL Zone carry forward from Day 1
+
+Check on every candle
 
 * Price still between 1000 and 990 - SL Zone remains in status
 * Price below 990 - SL Hit
