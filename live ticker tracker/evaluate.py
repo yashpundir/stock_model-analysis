@@ -15,7 +15,7 @@ client_id = config['Fyers']['client_id']
 access_token = config['Fyers']['access_token']
 fyers = fyersModel.FyersModel(client_id=client_id, token=access_token, log_path="apiV2")         # Authorize
 
-logging.basicConfig(filename='log.txt', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
+logging.basicConfig(filename='log.txt', format='\n%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
 
 
 def get_active_data(df):
@@ -137,7 +137,10 @@ def get_bull(df, ind, row, today):
     df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
     df.loc[ind, 'P&L FUT (UE)'] = (fres[4] - row['Entry Price FUT']) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
-    df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
+    try:
+        df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
+    except ZeroDivisionError:
+        logging.error(f"\nZeroDivisionError in Trade ID {row['Trade ID']}", exc_info=True)
     
     # update if alert is active
     if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
@@ -179,7 +182,10 @@ def get_bear(df, ind, row, today):
     df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
     df.loc[ind, 'P&L FUT (UE)'] = (row['Entry Price FUT'] - fres[4]) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
-    df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
+    try:
+        df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
+    except ZeroDivisionError:
+        logging.error(f"\nZeroDivisionError in Trade ID {row['Trade ID']}", exc_info=True)
     
     # update if alert is active
     if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
