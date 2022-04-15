@@ -23,7 +23,7 @@ def get_active_data(df):
 
 def update_status(df):
     for i, row in df.iterrows():
-        if dt.date.today() == dt.datetime.strptime(row['Expiry'], '%d%b%Y').date():
+        if dt.date.today() == dt.datetime.strptime(row['Expiry'], '%d%b%Y').date() and dt.datetime.now().time() > dt.time(10, 0):
             if row['Status'] in ['T1 Hit', 'SL Hit']:
                 df.loc[i, 'Status'] = f"Expired-{row['Status']}"
             else:
@@ -75,16 +75,19 @@ def check_bull_SL(row, sres, ind, df):
         elif extended_SL <= sres[4] <= row['SL']:
             df.loc[ind, 'Status'] = 'SL Zone'
 
+    elif row['Status']=='SL Zone':
+        if sres[4] <= extended_SL:
+            df.loc[ind, 'Status'] = 'SL Hit'
+        
+        elif sres[4] >= row['Trigger Price']:
+            df.loc[ind, 'Status'] = 'ACTIVE'
+
     elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and row['Status']=='SL Zone':
         if sres[4] <= row['SL']:
             df.loc[ind, 'Status'] = 'SL Hit'
         else:
             df.loc[ind, 'Status'] = 'ACTIVE'
-
-    elif row['Status']=='SL Zone':
-        if sres[4] <= extended_SL:
-            df.loc[ind, 'Status'] = 'SL Hit'
-    
+ 
 def check_bear_SL(row, sres, ind, df):
     extended_SL = row['SL'] + row['SL']*0.01
 
@@ -95,15 +98,18 @@ def check_bear_SL(row, sres, ind, df):
         elif row['SL'] <= sres[4] <= extended_SL:
             df.loc[ind, 'Status'] = 'SL Zone'
 
+    elif row['Status']=='SL Zone':
+        if sres[4] >= extended_SL:
+            df.loc[ind, 'Status'] = 'SL Hit'
+
+        elif sres[4] <= row['Trigger Price']:
+            df.loc[ind, 'Status'] = 'ACTIVE'
+
     elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and row['Status']=='SL Zone':
         if sres[4] >= row['SL']:
             df.loc[ind, 'Status'] = 'SL Hit'
         else:
             df.loc[ind, 'Status'] = 'ACTIVE'
-
-    elif row['Status']=='SL Zone':
-        if sres[4] >= extended_SL:
-            df.loc[ind, 'Status'] = 'SL Hit'
 
 #--------------------------------------------------#
 # STRATEGY 1                                       #
@@ -112,7 +118,7 @@ def check_bear_SL(row, sres, ind, df):
 
 def master(df):
     today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
-    
+
     for ind, row in df.iterrows():
         try:
             if row["Status"][:7]!='Expired':
@@ -138,7 +144,7 @@ def get_bull(df, ind, row, today):
     df.loc[ind, 'P&L FUT (UE)'] = (fres[4] - row['Entry Price FUT']) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
     try:
-        df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
+        df.loc[ind, 'Ratio'] = abs((fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT']))
     except ZeroDivisionError:
         logging.error(f"\nZeroDivisionError in Trade ID {row['Trade ID']}", exc_info=True)
     
@@ -183,7 +189,7 @@ def get_bear(df, ind, row, today):
     df.loc[ind, 'P&L FUT (UE)'] = (row['Entry Price FUT'] - fres[4]) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
     try:
-        df.loc[ind, 'Ratio'] = (fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT'])
+        df.loc[ind, 'Ratio'] = abs((fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT']))
     except ZeroDivisionError:
         logging.error(f"\nZeroDivisionError in Trade ID {row['Trade ID']}", exc_info=True)
     
@@ -314,11 +320,113 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
 
     df.loc[ind, 'Total P&L'] = df.loc[ind, 'P&L OPT1'] + df.loc[ind, 'P&L OPT2']        
         
+########################################
+def final_call(row, s):
+    if s==0:
+      symbol1 = row['Ticker Name OPT']
+      symbol2 = row['Ticker Name FUT']
+    else:
+      symbol1 = row['Ticker Name OPT1']
+      symbol2 = row['Ticker Name OPT2']
+
+    ds_data = {"symbol": f"NSE:{row['Stock']}-EQ", "ohlcv_flag":"1"}
+    ds1_data = {"symbol": f"NSE:{symbol1}", "ohlcv_flag":"1"}
+    ds2_data = {"symbol": f"NSE:{symbol2}", "ohlcv_flag":"1"}
+
+    ds = fyers.depth(ds_data)['d'][f"NSE:{row['Stock']}-EQ"]['ltp']
+    time.sleep(0.25)
+    ds1 = fyers.depth(ds1_data)['d'][f"NSE:{symbol1}"]['ltp']
+    time.sleep(0.25)
+    ds2 = fyers.depth(ds2_data)['d'][f"NSE:{symbol2}"]['ltp']
+
+    return [0, 0, 0, 0, ds], [0, 0, 0, 0, ds1], [0, 0, 0, 0, ds2]
+########################################
+
+
+
+###############################################
+# NCASH, Illiquid, Other, RTP Sheets' Functions
+###############################################
+def master2(df):
+    today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
+
+    for ind, row in df.iterrows():
+        try:
+            if row["Status"] in ['ACTIVE', 'SL Zone']:
+                if row['Type']=='Bullish':
+                    get_bull2(df, ind, row, today)
+                else:
+                    get_bear2(df, ind, row, today)
+        except IndexError as e:
+            logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
+            continue
+
+def update_status2(df):
+    for i, row in df.iterrows():
+        today = dt.date.today()
+        trigger = dt.datetime.strptime(row['Trigger Date'], '%d/%m/%Y').date()
+        offset = today - trigger 
+        if offset.days>=21  and dt.datetime.now().time() > dt.time(10, 0):
+            if row['Status'] in ['T1 Hit', 'SL Hit']:
+                df.loc[i, 'Status'] = f"Expired-{row['Status']}"
+            else:
+                df.loc[i, 'Status'] = f"Expired-Stagnant"
+
+def fetch_candles2(row, today):
+    now = dt.datetime.today()
+    if now.time() < dt.time(4, 20):
+      reso = 30
+    else:
+      reso = 15
+
+    hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
+    hs = fyers.history(hs_data)['candles']
+    time.sleep(0.25)
+
+    # Calculate the required epoch/candle
+    mins = (now.minute - (now.minute % 15) - reso) % 60
+    hr = now.hour if mins < now.minute else now.hour - 1
+    epoch = dt.datetime(now.year, now.month, now.day, hr, mins).timestamp()
+    #epoch = 1647337500.0                                                        03:15 candle for testing purpose
+
+    # index the required candle
+    sres = hs[np.where(np.array(hs) == epoch)[0][0]]
+
+    return sres
+
+def get_bull2(df, ind, row, today):
+    # Get data 
+    sres = fetch_candles2(row, today)
+
+    df.loc[ind, 'Stock CMP'] = sres[4]
+    df.loc[ind, 'P&L'] = sres[4] - row['Trigger Price']
+
+    if sres[2] >= row['T1']:                                                       # [2] => high
+        df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low                                   
+    else:                                                                         # check SL Hit or not
+        check_bull_SL(row, sres, ind, df)
+
+def get_bear2(df, ind, row, today):
+    # Get data 
+    sres = fetch_candles2(row, today)
+
+    df.loc[ind, 'Stock CMP'] = sres[4]
+    df.loc[ind, 'P&L'] =  row['Trigger Price'] - sres[4]
+
+    if sres[3] <= row['T1']:                                                       # [2] => high
+        df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low                                   
+    else:                                                                         # check SL Hit or not
+        check_bear_SL(row, sres, ind, df)
+
 # Push updated data back to google sheets
 def push_changes(sheet, df):
     df_new = pd.DataFrame(sheet.get_all_records())
     df_new = get_active_data(df_new)                                                  # Remove the expired alerts
     offset = df_new.shape[0] - df.shape[0]                                            # Look for any new rows
     if offset>0:
-        logging.info(f"Found {offset} new entries before pushing to {sheet.title}; {df_new.iloc[np.arange(offset), 1].values.tolist()}\nPushing from GS row {2+offset}.\n")
+        logging.info(f"Detected {offset} new entries before pushing to {sheet.title}; {df_new.iloc[np.arange(offset), 1].values.tolist()}\nPushing from GS row {2+offset}.\n")
     gd.set_with_dataframe(sheet, df, row=2+offset, col=1, include_column_header=False)
+
+
+if __name__=='__main__':
+    print("This is a module dumbass")

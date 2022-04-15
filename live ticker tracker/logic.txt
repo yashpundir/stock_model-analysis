@@ -190,9 +190,9 @@ Extended_SL - 1% - 990
 
 Check on day closing price
 
-- Price closed between 1000 and 990 - SL Zone
-- Price closed below 990 - SL Hit
-- Price above 1000 - Active
+- Price closed between SL and Extended_SL - SL Zone
+- Price closed below Extended_SL - SL Hit
+- Price above SL - Active
 
 
 Day 2
@@ -201,13 +201,13 @@ Day 2
 
 Check on every candle
 
-* Price still between 1000 and 990 - SL Zone remains in status
-* Price below 990 - SL Hit
-* Price above 1000 - SL Zone remains in status
+* Price still between SL and Extended_SL - SL Zone remains in status
+* Price below Extended_SL - SL Hit
+* Price above Trigger Price - ACTIVE
 
 - Check on day closing price
 
-* Price still below 1000 - SL Hit
-* Price above 1000 - Active
+* Price still below SL - SL Hit
+* Price above SL - Active
 
 ########################################################################################################################
