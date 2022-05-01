@@ -47,9 +47,9 @@ def fetch_candles(row, today, s):
     hs1_data = {"symbol": f"NSE:{symbol1}", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
     hs2_data = {"symbol": f"NSE:{symbol2}", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
     hs = fyers.history(hs_data)['candles']
-    time.sleep(0.25)
+    time.sleep(0.5)
     hs1 = fyers.history(hs1_data)['candles']
-    time.sleep(0.25)
+    time.sleep(0.5)
     hs2 = fyers.history(hs2_data)['candles']
 
     # Calculate the required epoch/candle
@@ -75,6 +75,12 @@ def check_bull_SL(row, sres, ind, df):
         elif extended_SL <= sres[4] <= row['SL']:
             df.loc[ind, 'Status'] = 'SL Zone'
 
+    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and row['Status']=='SL Zone':
+        if sres[4] <= row['SL']:
+            df.loc[ind, 'Status'] = 'SL Hit'
+        else:
+            df.loc[ind, 'Status'] = 'ACTIVE'
+
     elif row['Status']=='SL Zone':
         if sres[4] <= extended_SL:
             df.loc[ind, 'Status'] = 'SL Hit'
@@ -82,11 +88,7 @@ def check_bull_SL(row, sres, ind, df):
         elif sres[4] >= row['Trigger Price']:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and row['Status']=='SL Zone':
-        if sres[4] <= row['SL']:
-            df.loc[ind, 'Status'] = 'SL Hit'
-        else:
-            df.loc[ind, 'Status'] = 'ACTIVE'
+    
  
 def check_bear_SL(row, sres, ind, df):
     extended_SL = row['SL'] + row['SL']*0.01
@@ -98,17 +100,17 @@ def check_bear_SL(row, sres, ind, df):
         elif row['SL'] <= sres[4] <= extended_SL:
             df.loc[ind, 'Status'] = 'SL Zone'
 
+    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and row['Status']=='SL Zone':
+        if sres[4] >= row['SL']:
+            df.loc[ind, 'Status'] = 'SL Hit'
+        else:
+            df.loc[ind, 'Status'] = 'ACTIVE'
+
     elif row['Status']=='SL Zone':
         if sres[4] >= extended_SL:
             df.loc[ind, 'Status'] = 'SL Hit'
 
         elif sres[4] <= row['Trigger Price']:
-            df.loc[ind, 'Status'] = 'ACTIVE'
-
-    elif (dt.datetime.fromtimestamp(sres[0]).time() == dt.time(9, 45)) and row['Status']=='SL Zone':
-        if sres[4] >= row['SL']:
-            df.loc[ind, 'Status'] = 'SL Hit'
-        else:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
 #--------------------------------------------------#
@@ -381,7 +383,7 @@ def fetch_candles2(row, today):
 
     hs_data = {"symbol": f"NSE:{row['Stock']}-EQ", "resolution":reso, "date_format":"1", "range_from":today, "range_to":today, "cont_flag":"1"}
     hs = fyers.history(hs_data)['candles']
-    time.sleep(0.25)
+    time.sleep(0.5)
 
     # Calculate the required epoch/candle
     mins = (now.minute - (now.minute % 15) - reso) % 60
@@ -402,7 +404,8 @@ def get_bull2(df, ind, row, today):
     df.loc[ind, 'P&L'] = sres[4] - row['Trigger Price']
 
     if sres[2] >= row['T1']:                                                       # [2] => high
-        df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low                                   
+        df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low  
+        df.loc[ind, 'P&L'] = sres[2] - row['Trigger Price']
     else:                                                                         # check SL Hit or not
         check_bull_SL(row, sres, ind, df)
 
@@ -414,7 +417,8 @@ def get_bear2(df, ind, row, today):
     df.loc[ind, 'P&L'] =  row['Trigger Price'] - sres[4]
 
     if sres[3] <= row['T1']:                                                       # [2] => high
-        df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low                                   
+        df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low          
+        df.loc[ind, 'P&L'] = row['Trigger Price'] - sres[3]                         
     else:                                                                         # check SL Hit or not
         check_bear_SL(row, sres, ind, df)
 

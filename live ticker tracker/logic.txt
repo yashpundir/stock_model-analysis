@@ -63,7 +63,7 @@
 # *The exact price of of opt1 & opt2 at the time of T1 hit cannot be obtained because the script runs once every 15 min,
 # therefore, instead of the exact price of opt1/2 at the time of T1 hit, we use the high's & low's of previous
 # 15 min candle and assume them as the exit price. This should not affect the P&L too much as there won't be much 
-# fluctuation b/w the high/low and the exact price of opt1/2 at time of T1 hit (which will obviously be < 15 min).
+# fluctuation b/w the high/low and the exact price of opt1/2 at time of T1 hit (which cannot be more than 15 min).
 
 ########################################################################################################################
 
@@ -149,7 +149,7 @@
 # *The exact price of of opt1 & opt2 at the time of T1 hit cannot be obtained because the script runs once every 15 min,
 # therefore, instead of the exact price of opt1/2 at the time of T1 hit, we use the high's & low's of previous
 # 15 min candle and assume them as the exit price. This should not affect the P&L too much as there won't be much 
-# fluctuation b/w the high/low and the exact price of opt1/2 at time of T1 hit (which will obviously be < 15 min).
+# fluctuation b/w the high/low and the exact price of opt1/2 at time of T1 hit (which cannot be more than 15 min).
 
 ########################################################################################################################
 
@@ -209,5 +209,34 @@ Check on every candle
 
 * Price still below SL - SL Hit
 * Price above SL - Active
+
+
+(Assuming Bearish Alert)
+Day 1
+-----
+SL - 1000
+Extended_SL + 1% = 1010
+
+Check on day closing price
+
+- Price closed between SL and Extended_SL - SL Zone
+- Price closed above Extended_SL - SL Hit
+- Price below SL - Active
+
+
+Day 2
+------
+- SL Zone carry forward from Day 1
+
+Check on every candle
+
+* Price still between SL and Extended_SL - SL Zone remains in status
+* Price above Extended_SL - SL Hit
+* Price below Trigger Price - ACTIVE
+
+- Check on day closing price
+
+* Price still above SL - SL Hit
+* Price below SL - Active
 
 ########################################################################################################################
