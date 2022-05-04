@@ -11,7 +11,7 @@ def master(df):
 
 
     for index, row in df.iterrows():
-
+        print(f"downloading data for {row['Stock']} - {row['Date']}")
         data = yf.download(row['Stock'], start=row['Date'], end=row['Date']+dt.timedelta(days=30))
         try:
             data = data.iloc[:15, :]
