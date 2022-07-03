@@ -71,12 +71,13 @@ for i in all_messages:
 
 # Filter out required data from each msg in all_Messages and store it into all_values inorder to create a df later.
 all_values = []
-for i in all_Messages:
+for i in range(len(all_Messages)):
+    msg = all_Messages[i]
     values = []
-    for j in i:
-        if j in ['What:', 'Time:', 'Stock:', 'Price:',  'Above', 'Target:']:
-            if j=='Target:':                                    # Upto 3 targets
-                targets = i[i.index(j)+1 : i.index(j)+4]
+    for j in range(len(msg)):
+        if msg[j] in ['What:', 'Time:', 'Stock:', 'Trigger',  'Above', 'Target:']:
+            if msg[j]=='Target:':                                    # Upto 3 targets
+                targets = msg[j+1 : j+4]
                 targets = [t.replace(',','') for t in targets]
 
                 if 'RS:' in targets:                            # If targets < 3, 'RS:' will crop up in targets, need to remove that.
@@ -85,12 +86,14 @@ for i in all_Messages:
                 
                 values.extend(targets)
 
+            elif msg[j]=='Trigger':
+                if msg[j+1] == 'Price:':                      
+                    values.append(msg[j+2])
+
             else:
-                values.append(i[i.index(j)+1])                   # append value of current parameter to values
-                i.remove(j)                                      # Above occurs 2 time (since 2 SL), therefore to fetch '2nd' Above.
+                values.append(msg[j+1])                   # append value of current parameter to values
 
-    all_values.append(values)                                    # Append all parameter values into all_values
-
+    all_values.append(values)
 
 # Format df
 df_recent = pd.DataFrame(all_values, columns = ['Type', 'Date', 'Stock', 'Price', 'SL1', 'SL2', 'T1', 'T2', 'T3'])
@@ -106,9 +109,9 @@ df_recent['T1'] = df_recent['T1'].astype(float)
 df_recent['T2'] = df_recent['T2'].astype(float)
 df_recent['T3'] = df_recent['T3'].astype(float)
 
-# MANAGE EXCELS
+# # MANAGE EXCELS
 
-# Adding the previous 15 day data from current data to df_recent in order to be evaluated again
+# # Adding the previous 15 day data from current data to df_recent in order to be evaluated again
 backup = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/paid channel/backup data.xlsx')
 day15data = backup[backup.Date>=backup.Date.unique()[:15][-1]]        # Get previous 15 day's data from current data
 backup = pd.concat([df_recent, backup])                               # update backup data with df_recent
