@@ -203,7 +203,7 @@ Check on every candle
 
 * Price still between SL and Extended_SL - SL Zone remains in status
 * Price below Extended_SL - SL Hit
-* Price above Trigger Price - ACTIVE
+* Price above SL - ACTIVE
 
 - Check on day closing price
 
@@ -232,7 +232,7 @@ Check on every candle
 
 * Price still between SL and Extended_SL - SL Zone remains in status
 * Price above Extended_SL - SL Hit
-* Price below Trigger Price - ACTIVE
+* Price below SL - ACTIVE
 
 - Check on day closing price
 

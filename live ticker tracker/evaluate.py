@@ -85,7 +85,7 @@ def check_bull_SL(row, sres, ind, df):
         if sres[4] <= extended_SL:
             df.loc[ind, 'Status'] = 'SL Hit'
         
-        elif sres[4] >= row['Trigger Price']:
+        elif sres[4] >= row['SL']:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
     
@@ -110,7 +110,7 @@ def check_bear_SL(row, sres, ind, df):
         if sres[4] >= extended_SL:
             df.loc[ind, 'Status'] = 'SL Hit'
 
-        elif sres[4] <= row['Trigger Price']:
+        elif sres[4] <= row['SL']:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
 #--------------------------------------------------#
