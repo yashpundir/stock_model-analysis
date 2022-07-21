@@ -2,7 +2,6 @@ import datetime as dt
 import yfinance as yf
 import numpy as np
 
-
 # Function that evaluates the alerts and organizes the result into the df
 def master(df):
     Result = []
@@ -35,7 +34,6 @@ def master(df):
         NoD.append(info[1])
         fifteenDay_close.append(info[2])
         
-
     df.insert(df.shape[1], 'Result', Result)
     df.insert(df.shape[1], '15DayClose', fifteenDay_close)
     df.insert(df.shape[1], 'NoD', NoD)
@@ -65,6 +63,11 @@ def get_bull(row, highs, closes, day, latch, SL_counter, result):
 
 
         if close < row['SL1'] and latch==0:                   # SL Hit if close < SL1 for 2 consecutive days
+            if SL_counter==1 and close < row['SL1'] - row['SL1']*0.01:                 # Extended SL
+                result = 'SL Hit'
+                NOD = day
+                break        
+
             if SL_counter==2:
                 result = 'SL Hit'
                 NOD = day
@@ -110,6 +113,11 @@ def get_bear(row, lows, closes, day, latch, SL_counter, result):
 
 
         if close > row['SL1'] and latch==0:                   # SL Hit if close > SL1 for 2 consecutive days
+            if SL_counter==1 and close > row['SL1'] + row['SL1']*0.01:                 # Extended SL
+                result = 'SL Hit'
+                NOD = day
+                break
+
             if SL_counter==2:
                 result = 'SL Hit'
                 NOD = day
@@ -129,5 +137,4 @@ def get_bear(row, lows, closes, day, latch, SL_counter, result):
             result = 'ON'
             NOD = day
             
-    
     return result, NOD, closes[-1]
