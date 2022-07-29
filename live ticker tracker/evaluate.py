@@ -322,29 +322,6 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
 
     df.loc[ind, 'Total P&L'] = df.loc[ind, 'P&L OPT1'] + df.loc[ind, 'P&L OPT2']        
         
-########################################
-def final_call(row, s):
-    if s==0:
-      symbol1 = row['Ticker Name OPT']
-      symbol2 = row['Ticker Name FUT']
-    else:
-      symbol1 = row['Ticker Name OPT1']
-      symbol2 = row['Ticker Name OPT2']
-
-    ds_data = {"symbol": f"NSE:{row['Stock']}-EQ", "ohlcv_flag":"1"}
-    ds1_data = {"symbol": f"NSE:{symbol1}", "ohlcv_flag":"1"}
-    ds2_data = {"symbol": f"NSE:{symbol2}", "ohlcv_flag":"1"}
-
-    ds = fyers.depth(ds_data)['d'][f"NSE:{row['Stock']}-EQ"]['ltp']
-    time.sleep(0.25)
-    ds1 = fyers.depth(ds1_data)['d'][f"NSE:{symbol1}"]['ltp']
-    time.sleep(0.25)
-    ds2 = fyers.depth(ds2_data)['d'][f"NSE:{symbol2}"]['ltp']
-
-    return [0, 0, 0, 0, ds], [0, 0, 0, 0, ds1], [0, 0, 0, 0, ds2]
-########################################
-
-
 
 ###############################################
 # NCASH, Illiquid, Other, RTP Sheets' Functions

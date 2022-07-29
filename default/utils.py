@@ -1,6 +1,9 @@
 import datetime as dt
 import yfinance as yf
 import numpy as np
+import logging
+
+logging.basicConfig(filename='log2.txt', format='\n%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
 
 # Function that evaluates the alerts and organizes the result into the df
 def master(df):
@@ -8,32 +11,38 @@ def master(df):
     NoD = []
     fifteenDay_close = []
 
-
+    drop = []
     for index, row in df.iterrows():
-        print(f"downloading data for {row['Stock']} - {row['Date']}")
-        data = yf.download(row['Stock'], start=row['Date'], end=row['Date']+dt.timedelta(days=30))
         try:
-            data = data.iloc[:15, :]
-        except:
-            pass
+            print(f"downloading data for {row['Stock']} - {row['Date']}")
+            data = yf.download(row['Stock'], start=row['Date'], end=row['Date']+dt.timedelta(days=30))
+            try:
+                data = data.iloc[:21, :]                      # Need to evaluate for only 21 days
+            except:
+                pass
+                
+            highs = data['High'].round(2)
+            lows = data['Low'].round(2)
+            closes = data['Close'].round(2)
+            day = 0
+            latch = 0
+            SL_counter = 1
+            result = ''
             
-        highs = data['High'].round(2)
-        lows = data['Low'].round(2)
-        closes = data['Close'].round(2)
-        day = 0
-        latch = 0
-        SL_counter = 1
-        result = ''
+            if row['Type']=='Bullish':
+                info = get_bull(row, highs, closes, day, latch, SL_counter, result)
+            else:
+                info = get_bear(row, lows, closes, day, latch, SL_counter, result)
+                
+            Result.append(info[0])
+            NoD.append(info[1])
+            fifteenDay_close.append(info[2])
+        except Exception as e:
+            logging.error(f"\nData failed to download for {row['Stock']}-{row['Date']}\n{e}", exc_info=True)
+            drop.append(index)
+            continue
         
-        if row['Type']=='Bullish':
-            info = get_bull(row, highs, closes, day, latch, SL_counter, result)
-        else:
-            info = get_bear(row, lows, closes, day, latch, SL_counter, result)
-            
-        Result.append(info[0])
-        NoD.append(info[1])
-        fifteenDay_close.append(info[2])
-        
+    df.drop(drop, axis=0, inplace=True)
     df.insert(df.shape[1], 'Result', Result)
     df.insert(df.shape[1], '15DayClose', fifteenDay_close)
     df.insert(df.shape[1], 'NoD', NoD)
@@ -81,7 +90,7 @@ def get_bull(row, highs, closes, day, latch, SL_counter, result):
 
 
     if result=='':
-        if len(closes) == 15:
+        if len(closes) == 21:
             result = 'STAGNANT'
             NOD = day
         else:
@@ -130,7 +139,7 @@ def get_bear(row, lows, closes, day, latch, SL_counter, result):
 
 
     if result=='':
-        if len(closes) == 15:
+        if len(closes) == 21:
             result = 'STAGNANT'
             NOD = day
         else:

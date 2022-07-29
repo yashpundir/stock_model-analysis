@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="text/javascript" src="myscript.js"></script>
+    
+        <!-- Custom CSS -->
+        <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous"> -->
+        <link rel="stylesheet" type="text/css" href="main.css"> 
+    
+        <title>Statistics</title>
+
+
+    
+    </head>
+
+    <body>
+        <h1 style="background-color:DodgerBlue;"> STATISTICS </h1>
+
+        <script>
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = today.toLocaleString('default', { month: 'short' }) 
+            var yyyy = today.getFullYear().toString().substr(-2);
+        </script>
+
+        <div id="container">
+            <button onclick="fo()" id="btn1">F&O</button>
+            <button onclick="ncash()" id="btn2">NCASH</button>
+            <button onclick="ncash_other()" id="btn3">NCASH_Other</button>
+            <button onclick="rtp()" id="btn4">RTP</button>
+            <!-- <button onclick="layout.html" id="btn5">COMBINED</button> -->
+            <button onclick="location.href='layout.html'" type="button">Combined</button>
+        </div>
+
+        <div class="col-md-8" id="hash">
+            <h2>Combined</h2>
+            <p></p>
+            <p></p>
+            <hr>
+            <strong class="stg1" id="tasl">Target Achieved v/s SL Hit</strong>
+            <strong class="stg1" id="final">Month-wise performance</strong>
+            <br>
+            <img class="mover" id="TASL" src="plots/Combined/tasl.png" alt="oops">
+            <img class="mover" id="FINAL" src="plots/Combined/final.png" alt="oops">
+            <hr>
+            <strong class="stg2" id="nod"></strong>
+            <strong class="stg2" id="stagnant"></strong>
+            <hr>
+            <strong class="stg3" id="bull">Bullish alerts</strong>
+            <strong class="stg3" id="bear">Bearish alerts</strong>
+            <br>
+            <strong class="stg4" id="nbull"></strong>
+            <strong class="stg4" id="nbear"></strong>
+            <br>
+            <img class="mover" id="BULL" src="plots/Combined/Bullish.png" alt="oops">
+            <img class="mover" id="BEAR" src="plots/Combined/Bearish.png" alt="oops">
+        </div>
+
+        <script>
+            document.getElementById("hash").getElementsByTagName("p")[0].innerHTML = `Data considered for evaluation -> <b>26 Jul, 21</b> to <b>${dd} ${mm},${yyyy}</b>`;
+
+            fetch("stats.json")
+                .then(response => response.json())
+                .then(data => {
+                    var total_alerts = data["Combined"]["total_alerts"];
+                    var total_bull = data["Combined"]["total_bull"];
+                    var total_bear = data["Combined"]["total_bear"];
+                    var avg_NoD = data["Combined"]["avg_NoD"];
+                    var total_stagnant = data["Combined"]["total_stagnant"];
+                    var stag_percent = total_stagnant/total_alerts * 100;
+                    var bull_percent = total_bull/total_alerts * 100;
+                    var bear_percent = total_bear/total_alerts * 100;
+
+                    document.getElementById("hash").getElementsByTagName("p")[1].innerHTML = `Total Alerts = ${total_alerts}`;
+                    document.getElementById("nbull").innerHTML = `Total Bullish Alerts = ${total_bull} (${bull_percent.toFixed(2)}% of total alerts)`;
+                    document.getElementById("nbear").innerHTML = `Total Bearish Alerts = ${total_bear} (${bear_percent.toFixed(2)}% of total alerts)`;
+                    document.getElementById("nod").innerHTML = `Avg no. of days needed to hit T1 = ${avg_NoD.toFixed(2)}`;
+                    document.getElementById("stagnant").innerHTML = `Total Stagnant alerts = ${total_stagnant} (${stag_percent.toFixed(2)}% of total alerts)`;
+                })
+        </script>   
+
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+
+    </body>

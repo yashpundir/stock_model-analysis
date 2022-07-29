@@ -1,4 +1,3 @@
-from msilib.schema import Error
 import pandas as pd
 import numpy as np
 import mysql.connector
@@ -83,5 +82,5 @@ try:
     Bob('NCASH', dfs['NCASH'])
     Bob('NCASH_Other', dfs['NCASH_Other'])
     Bob('RTP', dfs['RTP'])
-except Error as e:
+except Exception as e:
     logging.error(e, exc_info=True)

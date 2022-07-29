@@ -1,0 +1,66 @@
+button {
+    background-color: dodgerblue;
+    color: black;
+    border-radius: 10px;
+    margin: 50px;
+    margin-top: 30px;
+    width: 135px;
+    height: 50px;
+    font-size: large;
+    font-family: "Georgia", "Papyrus", monospace;
+}
+
+#container {
+    text-align: center;
+}
+
+h1 {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    text-align: center;
+}
+
+.col-md-8 p {
+    text-align: center;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.col-md-8 h2 {
+    margin-top: 0px;
+    text-align: center;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+hr {
+    height:3px;
+    border-width:0;
+    background-color: dodgerblue;
+  }
+
+strong.stg1 {
+    text-align: center;
+    margin-inline: 17%;
+}
+
+strong.stg2 {
+    text-align: center;
+    margin-inline: 13%;
+}
+
+strong.stg3 {
+    text-align: center;
+    margin-inline: 17%;
+}
+
+strong.stg4 {
+    text-align: center;
+    margin-inline: 10%;
+}
+
+img.mover {
+    width: 562px;
+    height: 375px;
+    margin-left: 3%;
+    margin-top: 0%;
+}
