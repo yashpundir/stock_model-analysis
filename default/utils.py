@@ -3,7 +3,7 @@ import yfinance as yf
 import numpy as np
 import logging
 
-logging.basicConfig(filename='log2.txt', format='\n%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
+logging.basicConfig(filename='logs.txt', format='\n%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
 
 # Function that evaluates the alerts and organizes the result into the df
 def master(df):

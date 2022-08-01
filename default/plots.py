@@ -1,13 +1,8 @@
 import pandas as pd
-import yfinance as yf
 import datetime as dt
-import numpy as np
 import matplotlib.pyplot as plt
 import calendar
 import json
-import numpy as np
-
-plt.rcParams['axes.facecolor'] = 'bisque'
 
 stats = {"FO":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "Cash_N500":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
@@ -15,10 +10,10 @@ stats = {"FO":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0
         "BO_Rising_Triangle":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "Combined":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0}}
         
-dfcf = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/FnO.xlsx')
-dfcn = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/NCASH.xlsx')
-dfno = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/NCASH_Other.xlsx')
-dfrtp = pd.read_excel('D:/Yash/Python Projects/tgm_stk_tkr/default/data/RTP.xlsx')
+dfcf = pd.read_excel('data/FnO.xlsx')
+dfcn = pd.read_excel('data/NCASH.xlsx')
+dfno = pd.read_excel('data/NCASH_Other.xlsx')
+dfrtp = pd.read_excel('data/RTP.xlsx')
 
 
 def statistics(df):
@@ -71,7 +66,7 @@ def TASL(df):
     plt.yticks(fontweight='bold')
     plt.xticks(fontweight='bold')
     plt.ylabel(ylabel='%', fontsize=20)
-    plt.savefig(f"D:/Yash/Python Projects/tgm_stk_tkr/default/templates/plots/{df.iloc[0, 0]}/tasl.png")
+    plt.savefig(f"report/data/plots/{df.iloc[0, 0]}/tasl.png")
     plt.close()
 
     return [ons]
@@ -103,7 +98,7 @@ def bull_bear_plot(df, side):
     plt.yticks(fontweight='bold')
     plt.xticks(fontweight='bold')
     plt.ylabel(ylabel='%', fontsize=20)
-    plt.savefig(f"D:/Yash/Python Projects/tgm_stk_tkr/default/templates/plots/{df.iloc[0, 0]}/{side}.png")
+    plt.savefig(f"report/data/plots/{df.iloc[0, 0]}/{side}.png")
     plt.close()
 
 def final(df, ons):
@@ -169,7 +164,7 @@ def final(df, ons):
 
     for i,j in enumerate(monthly_alerts):
         ax2.annotate(j, xy=(i+0.1, j+1), xycoords='data', fontsize=9, color='blue')
-    plt.savefig(f"D:/Yash/Python Projects/tgm_stk_tkr/default/templates/plots/{df.iloc[0, 0]}/final.png")
+    plt.savefig(f"report/data/plots/{df.iloc[0, 0]}/final.png")
 
 on = []
 for sheet in [dfcf, dfcn, dfno, dfrtp]:
@@ -198,5 +193,5 @@ bull_bear_plot(df, 'Bullish')
 bull_bear_plot(df, 'Bearish')
 final(df, on)
 
-with open('D:/Yash/Python Projects/tgm_stk_tkr/default/templates/stats.json' ,'w') as file:
+with open('report/data/stats.json' ,'w') as file:
     json.dump(stats, file)
