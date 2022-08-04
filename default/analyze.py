@@ -64,7 +64,7 @@ dfs = {'FnO':df_fo, 'NCASH':df_nc, 'NCASH_Other':df_co, 'RTP':df_rtp}
 # MANAGE EXCEL
 def Bob(excel, DF):
 
-    backup = pd.read_excel(f"data/{excel}.xlsx")
+    backup = pd.read_excel(f"data/{excel}.xlsx", engine="openpyxl")
     day15data = backup[backup.Date>=backup.Date.unique()[:15][-1]]        # Get previous month's last 15 day's data
     backup.drop(labels=range(day15data.shape[0]), axis=0, inplace=True)   # Drop previous month's last 15 day's data
     day15data.drop(labels=['Result', '15DayClose', 'NoD', 'result dummy'], axis=1, inplace=True)   # Drop the results column since they'll be updated again
@@ -75,7 +75,7 @@ def Bob(excel, DF):
     df_recent_results.insert(df_recent_results.shape[1], 'result dummy', result_dummy)
     
     df_updated_results = pd.concat([df_recent_results, backup])            # merge recent & old results
-    df_updated_results.to_excel(f"data/{excel}.xlsx", index=False)
+    df_updated_results.to_excel(f"data/{excel}.xlsx", index=False, engine="openpyxl")
 
 try:
     Bob('FnO', dfs['FnO'])

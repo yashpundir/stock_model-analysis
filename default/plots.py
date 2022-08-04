@@ -8,12 +8,13 @@ stats = {"FO":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0
         "Cash_N500":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "Cash_Other_N500":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "BO_Rising_Triangle":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
-        "Combined":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0}}
+        "Combined":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
+        "to_date":0}
         
-dfcf = pd.read_excel('data/FnO.xlsx')
-dfcn = pd.read_excel('data/NCASH.xlsx')
-dfno = pd.read_excel('data/NCASH_Other.xlsx')
-dfrtp = pd.read_excel('data/RTP.xlsx')
+dfcf = pd.read_excel('data/FnO.xlsx', engine="openpyxl")
+dfcn = pd.read_excel('data/NCASH.xlsx', engine="openpyxl")
+dfno = pd.read_excel('data/NCASH_Other.xlsx', engine="openpyxl")
+dfrtp = pd.read_excel('data/RTP.xlsx', engine="openpyxl")
 
 
 def statistics(df):
@@ -187,6 +188,7 @@ stats["Combined"]["avg_NoD"] = df[df['result dummy']=='Target achieved'].NoD.mea
 stats["Combined"]["total_stagnant"] = sum([stats[x]['total_stagnant'] for x in stats])
 stats["Combined"]["total_bull"] = sum([stats[x]['total_bull'] for x in stats])
 stats["Combined"]["total_bear"] = sum([stats[x]['total_bear'] for x in stats])
+stats["to_date"] = dt.datetime.strftime(dt.date.today(), format="%d %b, %y")
 
 ons = TASL(df)
 bull_bear_plot(df, 'Bullish')
