@@ -128,7 +128,7 @@ def master(df):
                     get_bull(df, ind, row, today)
                 else:
                     get_bear(df, ind, row, today)
-        except IndexError as e:
+        except Exception as e:
             logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
             continue
 
@@ -237,7 +237,7 @@ def Master(df):
                     Get_bull(df, ind, row, today)
                 else:
                     Get_bear(df, ind, row, today)
-        except IndexError as e:
+        except Exception as e:
             logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
             continue
                 
@@ -326,7 +326,7 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
 ###############################################
 # NCASH, Illiquid, Other, RTP Sheets' Functions
 ###############################################
-def master2(df):
+def master2(df):   
     today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
 
     for ind, row in df.iterrows():
@@ -336,7 +336,7 @@ def master2(df):
                     get_bull2(df, ind, row, today)
                 else:
                     get_bear2(df, ind, row, today)
-        except IndexError as e:
+        except Exception as e:
             logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
             continue
 
@@ -410,4 +410,4 @@ def push_changes(sheet, df):
 
 
 if __name__=='__main__':
-    print("This is a module dumbass")
+    print("This is a module.")
