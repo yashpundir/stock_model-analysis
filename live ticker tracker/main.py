@@ -24,7 +24,6 @@ if fyers.get_profile()['message'] != message:
             Master(df)                                                             # Evaluate all alerts                                                                
         push_changes(sheet1, df)
 
-
     for sheet in ['Illiquid', 'NCASH', 'Other', 'RTP']:
 
         sheet1 = gc.open('FnO_Tracker').worksheet(sheet)                           # Get Sheet 

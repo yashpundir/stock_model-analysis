@@ -10,8 +10,8 @@ def master(df):
     Result = []
     NoD = []
     fifteenDay_close = []
-
     drop = []
+    
     for index, row in df.iterrows():
         try:
             print(f"downloading data for {row['Stock']} - {row['Date']}")

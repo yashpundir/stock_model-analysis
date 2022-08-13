@@ -1,0 +1,53 @@
+------Evaluate alerts--------
+(Assuming Bullish Alert)
+* check each alert for 21 days since trigger date
+Logic:
+For each stock:
+    For each day:                                                             # 21 days iteration
+        if today's high > T3 or T2 or T1
+            result = Target Achieved (T1/T2/T3)
+        else if stock's close < SL (for 2 consecutive days):
+            result = SL Hit
+
+    if result != Target Achieved nor SL Hit even after 21 days:
+        result = STAGNANT
+
+(Assuming Bearish Alert)
+* check each alert for 21 days since trigger date
+Logic:
+For each stock:
+    For each day:                                                             # 21 days iteration
+        if today's low < T3 or T2 or T1
+            result = Target Achieved (T1/T2/T3)
+        else if stock's close > SL (for 2 consecutive days):
+            result = SL Hit
+
+    if result != Target Achieved nor SL Hit even after 21 days:
+        result = STAGNANT
+
+############################################################################################################
+
+----Evaluation of STAGNANT alerts-------
+(Assuming Bullish Alert)
+
+n = if stock's 21 day closing price < Trigger Price           (Small loss incurred)
+p = if stock's 21 day closing price > Trigger Price           (Small profit achieved)
+
+(n * 0.5) counted towards SL Hit
+(p * 0.5) counted towards Target Achieved
+i.e weightage of 0.5 to Stagnant alerts
+
+(Assuming Bearish Alert)
+
+n = if stock's 21 day closing price > Trigger Price           (Small loss incurred)
+p = if stock's 21 day closing price < Trigger Price           (Small profit achieved)
+
+(n * 0.5) counted towards SL Hit
+(p * 0.5) counted towards Target Achieved
+i.e weightage of 0.5 to Stagnant alerts
+
+############################################################################################################
+
+NOTE: Since the resolution of evaluating alerts is 1 day (i.e stock gets evaluated on OHLC of day instead of 15 min,30 min, 1 hr etc.), 
+the precision of the percentage of target achieved and SL Hit is a bit low. The current evaluation method employed on google sheets
+is more effective and precise as it relies on different logic compared to this and the resolution in that case is 15 min.

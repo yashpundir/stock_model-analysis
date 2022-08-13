@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import calendar
 import json
 
-stats = {"FO":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
+stats = {"Type":{"FO":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "Cash_N500":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "Cash_Other_N500":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
         "BO_Rising_Triangle":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
-        "Combined":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0},
+        "Combined":{"total_alerts":0, "avg_NoD":0, "total_stagnant":0, "total_bull":0, "total_bear":0}},
         "to_date":0}
         
 dfcf = pd.read_excel('data/FnO.xlsx', engine="openpyxl")
@@ -19,19 +19,19 @@ dfrtp = pd.read_excel('data/RTP.xlsx', engine="openpyxl")
 
 def statistics(df):
     total_alerts = df.shape[0]                     # total alerts
-    stats[df.iloc[0,0]]["total_alerts"] = total_alerts
+    stats['Type'][df.iloc[0,0]]["total_alerts"] = total_alerts
 
     total_bull = df[df.Type=='Bullish'].shape[0]             # Total bullish alerts
-    stats[df.iloc[0,0]]["total_bull"] = total_bull
+    stats['Type'][df.iloc[0,0]]["total_bull"] = total_bull
 
     total_bear = df[df.Type=='Bearish'].shape[0]         #Total bearish alerts
-    stats[df.iloc[0,0]]["total_bear"] = total_bear
+    stats['Type'][df.iloc[0,0]]["total_bear"] = total_bear
 
     Stagnant = df[df.Result=='STAGNANT'].shape[0]           #Total stagnant alerts
-    stats[df.iloc[0,0]]["total_stagnant"] = Stagnant
+    stats['Type'][df.iloc[0,0]]["total_stagnant"] = Stagnant
     
     avg_nod = df[df['result dummy']=='Target achieved'].NoD.mean()     # Avg no. of days needed to reach the highest target
-    stats[df.iloc[0,0]]["avg_NoD"] = avg_nod
+    stats['Type'][df.iloc[0,0]]["avg_NoD"] = avg_nod
 
 def TASL(df):
 
@@ -102,7 +102,7 @@ def bull_bear_plot(df, side):
     plt.savefig(f"report/data/plots/{df.iloc[0, 0]}/{side}.png")
     plt.close()
 
-def final(df, ons):
+def final(df, opens):
     dfm = df.sort_values(by='Date').set_index('Date')
     months = []
     mos = pd.Series(dfm.index.to_numpy().astype('datetime64[M]')).unique()
@@ -146,7 +146,7 @@ def final(df, ons):
     ax.plot(months, line_data[0], marker='o', color='darkgreen')
     ax.plot(months, line_data[1], marker='o', color='red')
     ax.grid(axis='y', lw=0.25)
-    ax.set_title(f'Totals alerts in {months[-1]}: {monthly_alerts[-1] + sum([len(p) for p in ons])}; OPEN alerts: {sum([len(p) for p in ons])}')
+    ax.set_title(f'Totals alerts in {months[-1]}: {monthly_alerts[-1] + sum([len(p) for p in opens])}; OPEN alerts: {sum([len(p) for p in opens])}')
 
     for i,j in enumerate(line_data[0]):
         ax.annotate(f'{round(j,1)}', xy=(i-0.1, j+1), xycoords='data', fontsize=9, color='darkgreen')
@@ -154,14 +154,14 @@ def final(df, ons):
     for i,j in enumerate(line_data[1]):
         ax.annotate(f'{round(j,1)}', xy=(i-0.1, j-3), xycoords='data', fontsize=9, color='red')
 
-    ax.legend(['Target achieved %', 'SL Hit %'], loc='best', facecolor='white')
+    ax.legend(['Target achieved %', 'SL Hit %'], loc='upper left', facecolor='white', fancybox=True, framealpha=0.5)
     ax.set_xticklabels(labels = months, fontweight='bold')
     ax.set_ylabel('Target & SL Hit in %', fontsize=16)
 
     ax2 = ax.twinx()
     ax2.plot(months, monthly_alerts, marker='o')
     ax2.set_ylabel('No. of alerts', fontsize=14, rotation=-90, labelpad=13)
-    ax2.legend(labels=['# of closed alerts'], loc='best', bbox_to_anchor=(0.993, 0.899), facecolor='white')
+    ax2.legend(labels=['# of closed alerts'], loc='upper left', bbox_to_anchor=(0.004, 0.9), facecolor='white', fancybox=True, framealpha=0.5)
 
     for i,j in enumerate(monthly_alerts):
         ax2.annotate(j, xy=(i+0.1, j+1), xycoords='data', fontsize=9, color='blue')
@@ -170,27 +170,29 @@ def final(df, ons):
 on = []
 for sheet in [dfcf, dfcn, dfno, dfrtp]:
     statistics(sheet)
-    ons = TASL(sheet)
-    on.append(ons)
+    ons_ = TASL(sheet)
+    on.append(ons_)
     bull_bear_plot(sheet, 'Bullish')
     if sheet.iloc[0,0]=='FO':
         bull_bear_plot(sheet, 'Bearish')
-    final(sheet, ons)
+    final(sheet, ons_)
+on = [p[0] for p in on]
 
 # Combined results
 df1 = pd.concat([dfcn, dfcf]).reset_index(drop=True)
 df2 = pd.concat([dfno, dfrtp]).reset_index(drop=True)
-df = pd.concat([df1, df2]).reset_index(drop=True).sort_values(by='Date')
+df = pd.concat([df1, df2]).sort_values(by='Date', ascending=False)
+df = df.reset_index(drop=True)
 df.loc[:, 'What'] = 'Combined'
 
-stats["Combined"]["total_alerts"] = sum([stats[x]['total_alerts'] for x in stats])
-stats["Combined"]["avg_NoD"] = df[df['result dummy']=='Target achieved'].NoD.mean()
-stats["Combined"]["total_stagnant"] = sum([stats[x]['total_stagnant'] for x in stats])
-stats["Combined"]["total_bull"] = sum([stats[x]['total_bull'] for x in stats])
-stats["Combined"]["total_bear"] = sum([stats[x]['total_bear'] for x in stats])
+stats['Type']["Combined"]["total_alerts"] = sum([stats['Type'][x]['total_alerts'] for x in stats['Type']])
+stats['Type']["Combined"]["avg_NoD"] = df[df['result dummy']=='Target achieved'].NoD.mean()
+stats['Type']["Combined"]["total_stagnant"] = sum([stats['Type'][x]['total_stagnant'] for x in stats['Type']])
+stats['Type']["Combined"]["total_bull"] = sum([stats['Type'][x]['total_bull'] for x in stats['Type']])
+stats['Type']["Combined"]["total_bear"] = sum([stats['Type'][x]['total_bear'] for x in stats['Type']])
 stats["to_date"] = dt.datetime.strftime(dt.date.today(), format="%d %b, %y")
 
-ons = TASL(df)
+ons_ = TASL(df) 
 bull_bear_plot(df, 'Bullish')
 bull_bear_plot(df, 'Bearish')
 final(df, on)

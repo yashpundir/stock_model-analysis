@@ -88,8 +88,6 @@ def check_bull_SL(row, sres, ind, df):
         elif sres[4] >= row['SL']:
             df.loc[ind, 'Status'] = 'ACTIVE'
 
-    
- 
 def check_bear_SL(row, sres, ind, df):
     extended_SL = row['SL'] + row['SL']*0.01
 
@@ -321,11 +319,11 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
         df.loc[ind, 'P&L OPT2'] = (row['Entry Price OPT2'] - df.loc[ind, 'Exit Price OPT2']) * row['Lot Size']
 
     df.loc[ind, 'Total P&L'] = df.loc[ind, 'P&L OPT1'] + df.loc[ind, 'P&L OPT2']        
-        
 
 ###############################################
 # NCASH, Illiquid, Other, RTP Sheets' Functions
 ###############################################
+
 def master2(df):   
     today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
 
