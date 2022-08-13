@@ -94,8 +94,20 @@
            
             </div>
         </div> 
-
-        <p><b>NOTE:</b> To know more about the logic used to evaluate the alerts in this period, please refer to this <a href ="https://github.com/yashpundir/stock_model-analysis/tree/master/default/report/data21/logic21.txt">link</a> </p>
+        
+        <div class="info">
+            <ul>
+                <li><span style="color: #ff0000">(+)</span>ive & <span style="color: #0a6507d3">(-)</span>ive STAGNANT alerts 
+                    (i.e alerts that went sideways neither Target Hit nor SL Hit after 15 days)
+                    are counted towards <span style="color: #ff0000">Target Hit</span> and <span style="color: #0a6507d3">SL Hit</span>
+                    categories respectively after being given a weightage of 0.5 (Applies to all 
+                    <span style="color: #ff0000">Target Hit</span> vs <span style="color: #0a6507d3">SL Hit</span> charts)
+                </li>
+                <li>Since complete data for month of July, 21 is not considered, therefore the stats derived from this month's data 
+                    cannot be considered statistically significant. (Applies to Month-wise performance chart under FO)</li>
+                <li>To know more about the logic used to evaluate the alerts in this period, please refer to this <a href ="data21/logic21.txt">link</a></li>
+              </ul>
+        </div>
 
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>

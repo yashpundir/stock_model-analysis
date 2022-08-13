@@ -65,3 +65,10 @@ hr {
     height: 62px;
     width: 205px;
 }
+
+div .info {
+    width: fit-content;
+    padding: 5px;
+    border: 5px solid #8045A1;
+    margin: 0;
+}
