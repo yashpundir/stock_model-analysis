@@ -16,7 +16,6 @@ if fyers.get_profile()['message'] != message:
         sheet1 = gc.open('FnO_Tracker').worksheet(sheet)                           # Get Sheet
         df = pd.DataFrame(sheet1.get_all_records())                                # Convert sheet to pandas df
 
-        df = get_active_data(df)                                                   # Remove already Expired alerts
         update_status(df)         
         if sheet=='Strategy1':                                                     # Check for Expired alerts and update them, if any
             master(df)

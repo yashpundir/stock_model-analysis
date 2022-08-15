@@ -400,12 +400,10 @@ def get_bear2(df, ind, row, today):
 # Push updated data back to google sheets
 def push_changes(sheet, df):
     df_new = pd.DataFrame(sheet.get_all_records())
-    df_new = get_active_data(df_new)                                                  # Remove the expired alerts
     offset = df_new.shape[0] - df.shape[0]                                            # Look for any new rows
     if offset>0:
         logging.info(f"Detected {offset} new entries before pushing to {sheet.title}; {df_new.iloc[np.arange(offset), 1].values.tolist()}\nPushing from GS row {2+offset}.\n")
     gd.set_with_dataframe(sheet, df, row=2+offset, col=1, include_column_header=False)
-
 
 if __name__=='__main__':
     print("This is a module.")
