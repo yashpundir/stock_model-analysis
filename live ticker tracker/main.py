@@ -15,12 +15,12 @@ if fyers.get_profile()['message'] != message:
 
         sheet1 = gc.open('FnO_Tracker').worksheet(sheet)                           # Get Sheet
         df = pd.DataFrame(sheet1.get_all_records())                                # Convert sheet to pandas df
-
-        update_status(df)         
+                 
         if sheet=='Strategy1':                                                     # Check for Expired alerts and update them, if any
             master(df)
         else:
-            Master(df)                                                             # Evaluate all alerts                                                                
+            Master(df)                                                             # Evaluate all alerts   
+        update_status(df)                                                             
         push_changes(sheet1, df)
 
     for sheet in ['Illiquid', 'NCASH', 'Other', 'RTP']:
@@ -28,7 +28,6 @@ if fyers.get_profile()['message'] != message:
         sheet1 = gc.open('FnO_Tracker').worksheet(sheet)                           # Get Sheet 
         df = pd.DataFrame(sheet1.get_all_records())                                # Convert sheet to pandas df
 
-        df = get_active_data(df)                                                  # Remove already Expired alerts
-        update_status2(df)                                                         # Check for Expired alerts and update them, if any
-        master2(df)                                                                 # Evaluate all alerts                                                                
+        master2(df)                                                                 # Evaluate all alerts    
+        update_status2(df)                                                         # Check for Expired alerts and update them, if any                                                            
         push_changes(sheet1, df)

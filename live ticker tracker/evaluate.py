@@ -28,6 +28,8 @@ def update_status(df):
                 df.loc[i, 'Status'] = f"Expired-{row['Status']}"
             else:
                 df.loc[i, 'Status'] = f"Expired-Stagnant"
+                df.loc[i, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')
+                df.loc[i, 'Trade Closed at'] = row['Stock CMP']
 
 def fetch_candles(row, today, s):
     now = dt.datetime.today()
@@ -56,7 +58,7 @@ def fetch_candles(row, today, s):
     mins = (now.minute - (now.minute % 15) - reso) % 60
     hr = now.hour if mins < now.minute else now.hour - 1
     epoch = dt.datetime(now.year, now.month, now.day, hr, mins).timestamp()
-    #epoch = 1647337500.0                                                        03:15 candle for testing purpose
+    # epoch = 1647337500.0                                                     #   03:15 candle for testing purpose
 
     # index the required candle
     sres = hs[np.where(np.array(hs) == epoch)[0][0]]
@@ -115,6 +117,7 @@ def check_bear_SL(row, sres, ind, df):
 # STRATEGY 1                                       #
 #--------------------------------------------------#
 # updates data inplace (not good coding practice)
+# candles = [tstmp O H L C V]
 
 def master(df):
     today = dt.datetime.strftime(dt.datetime.today(), format="%Y-%m-%d")
@@ -127,10 +130,8 @@ def master(df):
                 else:
                     get_bear(df, ind, row, today)
         except Exception as e:
-            logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
+            logging.error(f"Candle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!\n", exc_info=True)
             continue
-
-# candles = [tstmp O H L C V]
                 
 def get_bull(df, ind, row, today):
     # Get data 
@@ -143,13 +144,9 @@ def get_bull(df, ind, row, today):
     df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
     df.loc[ind, 'P&L FUT (UE)'] = (fres[4] - row['Entry Price FUT']) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
-    try:
-        df.loc[ind, 'Ratio'] = abs((fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT']))
-    except ZeroDivisionError:
-        logging.error(f"\nZeroDivisionError in Trade ID {row['Trade ID']}", exc_info=True)
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
+    if row['Status'] in ['ACTIVE','SL Zone']:
         evaluate_active_bull(df, ind, row, sres, ores, fres)
         
 def evaluate_active_bull(df, ind, row, sres, ores, fres):
@@ -157,14 +154,17 @@ def evaluate_active_bull(df, ind, row, sres, ores, fres):
     if sres[2] >= row['T1']:                                                       # [2] => high
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low
         df.loc[ind, 'Exit Price OPT'] = ores[3]                                    
-        df.loc[ind, 'Exit Price FUT'] = fres[2]                                    
+        df.loc[ind, 'Exit Price FUT'] = fres[2]
+        df.loc[ind, 'Trade Closed at'] = sres[4]   
+        df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                        
 
     else:                                                                         # check SL Hit or not
         check_bull_SL(row, sres, ind, df)
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT'] = ores[2]
             df.loc[ind, 'Exit Price FUT'] = fres[3]
-
+            df.loc[ind, 'Trade Closed at'] = sres[4]    
+            df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                       
     
     # Calculate P&L
     if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':       # If T1/SL is still not hit
@@ -188,13 +188,9 @@ def get_bear(df, ind, row, today):
     df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
     df.loc[ind, 'P&L FUT (UE)'] = (row['Entry Price FUT'] - fres[4]) * row['Lot Size']
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
-    try:
-        df.loc[ind, 'Ratio'] = abs((fres[4] - row['Entry Price FUT']) / (ores[4] - row['Entry Price OPT']))
-    except ZeroDivisionError:
-        logging.error(f"\nZeroDivisionError in Trade ID {row['Trade ID']}", exc_info=True)
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
+    if row['Status'] in ['ACTIVE','SL Zone']:
         evaluate_active_bear(df, ind, row, sres, ores, fres)
         
 def evaluate_active_bear(df, ind, row, sres, ores, fres):
@@ -202,13 +198,17 @@ def evaluate_active_bear(df, ind, row, sres, ores, fres):
     if sres[3] <= row['T1']:                                       # [3] => low 
         df.loc[ind, 'Status'] = 'T1 Hit'                           # [2] => high
         df.loc[ind, 'Exit Price OPT'] = ores[3]                    
-        df.loc[ind, 'Exit Price FUT'] = fres[3]                    
+        df.loc[ind, 'Exit Price FUT'] = fres[3]
+        df.loc[ind, 'Trade Closed at'] = sres[4]    
+        df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                      
 
     else:
         check_bear_SL(row, sres, ind, df)
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT'] = ores[2]
-            df.loc[ind, 'Exit Price FUT'] = fres[2]                     
+            df.loc[ind, 'Exit Price FUT'] = fres[2]          
+            df.loc[ind, 'Trade Closed at'] = sres[4]      
+            df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                     
     
     # Calculate P&L
     if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':       # If T1/SL is still not hit
@@ -236,7 +236,7 @@ def Master(df):
                 else:
                     Get_bear(df, ind, row, today)
         except Exception as e:
-            logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
+            logging.error(f"Candle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!\n", exc_info=True)
             continue
                 
 def Get_bull(df, ind, row, today):
@@ -252,7 +252,7 @@ def Get_bull(df, ind, row, today):
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT1 (UE)'] + df.loc[ind, 'P&L OPT2 (UE)']
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
+    if row['Status'] in ['ACTIVE','SL Zone']:
         Evaluate_active_bull(df, ind, row, sres, ores, o2res)
         
 def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
@@ -260,13 +260,18 @@ def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
     if sres[2] >= row['T1']:                                                       # [2] => high
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                                    
-        df.loc[ind, 'Exit Price OPT2'] = o2res[2]                                    
+        df.loc[ind, 'Exit Price OPT2'] = o2res[2]           
+        df.loc[ind, 'Trade Closed at'] = sres[4]
+        df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                           
 
     else:
         check_bull_SL(row, sres, ind, df)
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT1'] = ores[3]
-            df.loc[ind, 'Exit Price OPT2'] = o2res[3]                                    
+            df.loc[ind, 'Exit Price OPT2'] = o2res[3]
+            df.loc[ind, 'Trade Closed at'] = sres[4]
+            df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                           
+
     
     # Calculate P&L
     if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':      # If T1/SL is still not hit
@@ -292,7 +297,7 @@ def Get_bear(df, ind, row, today):
     df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT1 (UE)'] + df.loc[ind, 'P&L OPT2 (UE)']
     
     # update if alert is active
-    if row['Status']=='ACTIVE' or row['Status']=='SL Zone':
+    if row['Status'] in ['ACTIVE','SL Zone']:
         Evaluate_active_bear(df, ind, row, sres, ores, o2res)
         
 def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
@@ -301,13 +306,17 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
     if sres[3] <= row['T1']:                                       # [3] => low
         df.loc[ind, 'Status'] = 'T1 Hit'                           # [2] => high
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                     
-        df.loc[ind, 'Exit Price OPT2'] = o2res[2]                    
+        df.loc[ind, 'Exit Price OPT2'] = o2res[2] 
+        df.loc[ind, 'Trade Closed at'] = sres[4]  
+        df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                         
 
     else:
         check_bear_SL(row, sres, ind, df)
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT1'] = ores[3]
-            df.loc[ind, 'Exit Price OPT2'] = o2res[3]                     
+            df.loc[ind, 'Exit Price OPT2'] = o2res[3]
+            df.loc[ind, 'Trade Closed at'] = sres[4] 
+            df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                          
     
     # Calculate P&L
     if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':      # If T1/SL is still not hit
@@ -335,7 +344,7 @@ def master2(df):
                 else:
                     get_bear2(df, ind, row, today)
         except Exception as e:
-            logging.error(f"\nCandle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!", exc_info=True)
+            logging.error(f"Candle index not found for trade ID{row['Trade ID']}. Check apiV2 logs!\n", exc_info=True)
             continue
 
 def update_status2(df):
@@ -348,6 +357,8 @@ def update_status2(df):
                 df.loc[i, 'Status'] = f"Expired-{row['Status']}"
             else:
                 df.loc[i, 'Status'] = f"Expired-Stagnant"
+                df.loc[i, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')  
+                df.loc[i, 'Trade Closed at'] = row['Stock CMP']
 
 def fetch_candles2(row, today):
     now = dt.datetime.today()
@@ -364,7 +375,7 @@ def fetch_candles2(row, today):
     mins = (now.minute - (now.minute % 15) - reso) % 60
     hr = now.hour if mins < now.minute else now.hour - 1
     epoch = dt.datetime(now.year, now.month, now.day, hr, mins).timestamp()
-    #epoch = 1647337500.0                                                        03:15 candle for testing purpose
+    # epoch = 1647337500.0                                                    #    03:15 candle for testing purpose
 
     # index the required candle
     sres = hs[np.where(np.array(hs) == epoch)[0][0]]
@@ -380,9 +391,16 @@ def get_bull2(df, ind, row, today):
 
     if sres[2] >= row['T1']:                                                       # [2] => high
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low  
-        df.loc[ind, 'P&L'] = sres[2] - row['Trigger Price']
+        df.loc[ind, 'P&L'] = row['T1'] - row['Trigger Price']
+        df.loc[ind, 'Trade Closed at'] = row['T1']
+        df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                           
+
     else:                                                                         # check SL Hit or not
         check_bull_SL(row, sres, ind, df)
+        if df.loc[ind, 'Status']=='SL Hit':
+            df.loc[ind, 'P&L'] = row['SL'] - row['Trigger Price']
+            df.loc[ind, 'Trade Closed at'] = row['SL']
+            df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                             
 
 def get_bear2(df, ind, row, today):
     # Get data 
@@ -393,9 +411,16 @@ def get_bear2(df, ind, row, today):
 
     if sres[3] <= row['T1']:                                                       # [2] => high
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low          
-        df.loc[ind, 'P&L'] = row['Trigger Price'] - sres[3]                         
+        df.loc[ind, 'P&L'] = row['Trigger Price'] - row['T1']    
+        df.loc[ind, 'Trade Closed at'] = row['T1']
+        df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                             
+
     else:                                                                         # check SL Hit or not
         check_bear_SL(row, sres, ind, df)
+        if df.loc[ind, 'Status']=='SL Hit':
+            df.loc[ind, 'P&L'] = row['Trigger Price'] - row['SL']
+            df.loc[ind, 'Trade Closed at'] = row['SL']
+            df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                            
 
 # Push updated data back to google sheets
 def push_changes(sheet, df):
