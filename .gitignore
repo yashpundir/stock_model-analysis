@@ -2,6 +2,7 @@ __pycache__/
 **/__pycache__
 **/.ipynb_checkpoints 
 default/config.ini
+default/creds.json
 live\ ticker\ tracker/config.ini
 live\ ticker\ tracker/creds.json
 live\ ticker\ tracker/ticker.pem

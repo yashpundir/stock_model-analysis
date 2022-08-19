@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
-import mysql.connector
 import datetime as dt
-import calendar
+import gspread
 import configparser
-import utils
 import logging
 
 # Reading Configs
@@ -12,75 +10,59 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 logging.basicConfig(filename='logs.txt', format='\n%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
 
-# Setting configuration values
-host = config['SQL']['host']
-user = config['SQL']['user']
-pwd = config['SQL']['password']
-db = config['SQL']['database']
+scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',
+                    "https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
 
-# This month's date range
-today = dt.date.today()
-last_day = calendar.monthrange(today.year, today.month)[1]
-first = dt.date(today.year, today.month, 1)
-last = dt.date(today.year, today.month, last_day)
+gc = gspread.service_account(filename='creds.json',scopes=scope)
 
-# Connect to MySQL DB
-connection = mysql.connector.connect(host=host,
-                             user=user,
-                             password=pwd,
-                             database=db)
 
-cursor = connection.cursor()
-query = ("SELECT alert_type, data_date, stock, trigger_price, stoploss, target FROM web_hook_details WHERE data_date BETWEEN %s AND %s ORDER BY data_date DESC")
-cursor.execute(query, (dt.datetime.strftime(first, '%Y%m%d'), dt.datetime.strftime(last, '%Y%m%d')))
+sheets = {'Strategy1':'', 'Strategy2':'', 'Illiquid':'', 'NCASH':'', 'Other':'', 'RTP':''}
+for sheet in sheets:
+    sheet1 = gc.open('FnO_Tracker').worksheet(sheet)                           # Get Sheet
+    sheets[sheet] = pd.DataFrame(sheet1.get_all_records())
 
-# Make primary df
-df = pd.DataFrame(columns=['alert', 'Date', 'Stock', 'Price', 'SL1', 'T1'], data=cursor.fetchall())
-df = df[~(df['alert'] == "")]
-cursor.close()
-connection.close()
+# Data formatting for FO
+df1 = sheets['Strategy1']
+df2 = sheets['Strategy2']
+df3 = sheets['Illiquid']
 
-# Data Formatting
-disc = {'FO_Bearish':'FO', 'FO_Bullish':'FO', 'Cash_N500_Bullish':'Cash_N500', 'Cash_Other_N500_Bullish':'Cash_Other_N500', 'BO_Rising_Triangle':'BO_Rising_Triangle'}
-df.insert(0, 'What', df.alert.map(disc))                                            # Insert Bullish/Bearish Column
-df.insert(1, 'Type',df.alert.apply(lambda x: 'Bearish' if x=='FO_Bearish' else 'Bullish'))    # Insert Type of alert
-df.drop('alert', axis=1, inplace=True)
-df.loc[:, 'SL1'] = df.SL1.apply(lambda x: float([i for i in x.split() if i.replace('.','',1).isdigit()][0]))   # Extracting floating pt from string
-df.loc[:, 'Stock'] = df['Stock'].str.replace('#', '') + '.NS'
-df.insert(6, 'SL2', np.nan)
-df.insert(8, 'T2', np.nan)
-df.insert(9, 'T3', np.nan)
-df.loc[: ,'Date'] = pd.to_datetime(df['Date'])
-df.loc[: ,'Price'] = df['Price'].astype(float)
-df.loc[: ,'T1'] = df['T1'].astype(float)
+df1 = df1[['Type', 'Trigger Date', 'Stock', 'Trigger Price', 'SL', 'T1', 'Status', 'Trade Closed at', 'Closing day']]
+df2 = df2[['Type', 'Trigger Date', 'Stock', 'Trigger Price', 'SL', 'T1', 'Status', 'Trade Closed at', 'Closing day']]
+df3 = df3[['Type', 'Trigger Date', 'Stock', 'Trigger Price', 'SL', 'T1', 'Status', 'Trade Closed at', 'Closing day']]
 
-# Filter out
-df_fo = df.query('What == "FO"').reset_index(drop=True)
-df_co = df.query('What == "Cash_Other_N500"').reset_index(drop=True)
-df_nc = df.query('What == "Cash_N500"').reset_index(drop=True)
-df_rtp = df.query('What == "BO_Rising_Triangle"').reset_index(drop=True)
-dfs = {'FnO':df_fo, 'NCASH':df_nc, 'NCASH_Other':df_co, 'RTP':df_rtp}
+df = pd.concat([df1,df2,df3], axis=0)
+df['Trigger Date'] = pd.to_datetime(df['Trigger Date'], format='%d/%m/%Y')
+df.drop_duplicates(inplace=True)
+df.sort_values(by='Trigger Date', axis=0, inplace=True, ascending=False)         # maybe not needed
+df.insert(0, 'What', 'FO')
+df.reset_index(drop=True, inplace=True)
+NoD = [((dt.datetime.strptime(row['Closing day'], '%d/%m/%Y')).date() - row['Trigger Date'].date()).days+1 if row['Closing day']!='' else 0 for i,row in df.iterrows()]
+df['Closing day'] = NoD
+df.rename(columns={'Status':'Result','Trigger Date':'Date','Trigger Price':'Price','SL':'SL1', 'Closing day':'NoD'}, inplace=True)
+result_dummy = df.Result.map({'T1 Hit':'Target achieved', 'SL Hit':'SL Hit', 'SL Zone':'ON', 'ACTIVE':'ON', 'Expired-T1 Hit':'Target achieved', 'Expired-SL Hit':'SL Hit', 'Expired-Stagnant':'STAGNANT'})
+df.insert(df.shape[-1], 'result dummy', result_dummy)
+df = df[['What','Type', 'Date', 'Stock', 'Price', 'SL1', 'T1', 'Result', 'Trade Closed at', 'NoD', 'result dummy']]
 
-# MANAGE EXCEL
-def Bob(excel, DF):
+#d Data formatting for NCASH, Other, RTP
+df4 = sheets['NCASH']
+df5 = sheets['Other']
+df6 = sheets['RTP']
 
-    backup = pd.read_excel(f"data/{excel}.xlsx", engine="openpyxl")
-    day15data = backup[backup.Date>=backup.Date.unique()[:15][-1]]        # Get previous month's last 15 day's data
-    backup.drop(labels=range(day15data.shape[0]), axis=0, inplace=True)   # Drop previous month's last 15 day's data
-    day15data.drop(labels=['Result', '15DayClose', 'NoD', 'result dummy'], axis=1, inplace=True)   # Drop the results column since they'll be updated again
-    df_recent = pd.concat([DF, day15data])                                       # Merge this month's data on top of 15daydata
+df4 = df4[['Type', 'Trigger Date', 'Stock', 'Trigger Price', 'SL', 'T1', 'Status', 'Closing day', 'Trade Closed at']]
+df5 = df5[['Type', 'Trigger Date', 'Stock', 'Trigger Price', 'SL', 'T1', 'Status', 'Closing day', 'Trade Closed at']]
+df6 = df6[['Type', 'Trigger Date', 'Stock', 'Trigger Price', 'SL', 'T1', 'Status', 'Closing day', 'Trade Closed at']]
 
-    df_recent_results = utils.master(df_recent)                            # Get results for this month's data &  15daydata
-    result_dummy = ['Target achieved' if x in ['T1','T2','T3'] else x for x in df_recent_results.Result]
-    df_recent_results.insert(df_recent_results.shape[1], 'result dummy', result_dummy)
-    
-    df_updated_results = pd.concat([df_recent_results, backup])            # merge recent & old results
-    df_updated_results.to_excel(f"data/{excel}.xlsx", index=False, engine="openpyxl")
+for dff,what in list(zip([df4, df5, df6],['Cash_N500','Cash_Other_N500','BO_Rising_Triangle'])):
+    dff.loc[:, 'Trigger Date'] = pd.to_datetime(dff['Trigger Date'], format='%d/%m/%Y')
+    dff.insert(0, 'What', what)
+    NoD = [((dt.datetime.strptime(row['Closing day'], '%d/%m/%Y')).date() - row['Trigger Date'].date()).days+1 if row['Closing day']!='' else 0 for i,row in dff.iterrows()]
+    dff.loc[:, 'Closing day'] = NoD
+    dff.rename(columns={'Status':'Result','Trigger Date':'Date','Trigger Price':'Price','SL':'SL1', 'Closing day':'NoD'}, inplace=True)
+    result_dummy = dff.Result.map({'T1 Hit':'Target achieved', 'SL Hit':'SL Hit', 'SL Zone':'ON', 'ACTIVE':'ON', 'Expired-T1 Hit':'Target achieved', 'Expired-SL Hit':'SL Hit', 'Expired-Stagnant':'STAGNANT'})
+    dff.insert(dff.shape[-1], 'result dummy', result_dummy)
+    dff = dff[['What','Type', 'Date', 'Stock', 'Price', 'SL1', 'T1', 'Result', 'Trade Closed at', 'NoD', 'result dummy']]
 
-try:
-    Bob('FnO', dfs['FnO'])
-    Bob('NCASH', dfs['NCASH'])
-    Bob('NCASH_Other', dfs['NCASH_Other'])
-    Bob('RTP', dfs['RTP'])
-except Exception as e:
-    logging.error(e, exc_info=True)
+df.to_excel('data/FnO.xlsx', index=False)
+df4.to_excel('data/NCASH.xlsx', index=False)
+df5.to_excel('data/NCASH_Other.xlsx', index=False)
+df6.to_excel('data/RTP.xlsx', index=False)

@@ -35,7 +35,7 @@ def statistics(df):
 
 def TASL(df):
 
-    ons = df[df.Result=='ON'].index # Identify OPEN/ON alerts
+    ons = df[df['result dummy']=='ON'].index # Identify OPEN/ON alerts
     df.drop(ons, axis=0, inplace=True) # Drop the ON alerts from analysis
 
     # Total Target achieved and SL Hit alerts
@@ -43,11 +43,11 @@ def TASL(df):
     SL = df[df['result dummy']=='SL Hit'].shape[0]
 
     # (+)ive & (-)ive STAGNANT alerts
-    n1 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bullish') & (df['15DayClose']<df.Price)].shape[0]
-    p1 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bullish') & (df['15DayClose']>df.Price)].shape[0]
+    n1 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bullish') & (df['Trade Closed at']<df.Price)].shape[0]
+    p1 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bullish') & (df['Trade Closed at']>df.Price)].shape[0]
 
-    n2 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bearish') & (df['15DayClose']>df.Price)].shape[0]
-    p2 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bearish') & (df['15DayClose']<df.Price)].shape[0]
+    n2 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bearish') & (df['Trade Closed at']>df.Price)].shape[0]
+    p2 = df[(df['result dummy']=='STAGNANT') & (df.Type=='Bearish') & (df['Trade Closed at']<df.Price)].shape[0]
 
     p = p1 + p2
     n = n1 + n2
@@ -80,11 +80,11 @@ def bull_bear_plot(df, side):
     SL = side_df[side_df['result dummy']=='SL Hit'].shape[0]
     # (+)ive & (-)ive STAGNANT alerts
     if side=='Bullish':
-        n = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['15DayClose']<side_df.Price)].shape[0]
-        p = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['15DayClose']>side_df.Price)].shape[0]
+        n = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['Trade Closed at']<side_df.Price)].shape[0]
+        p = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['Trade Closed at']>side_df.Price)].shape[0]
     else:
-        n = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['15DayClose']>side_df.Price)].shape[0]
-        p = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['15DayClose']<side_df.Price)].shape[0]
+        n = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['Trade Closed at']>side_df.Price)].shape[0]
+        p = side_df[(side_df['result dummy']=='STAGNANT') & (side_df['Trade Closed at']<side_df.Price)].shape[0]
     # Weightage of 0.5 to TA & SL
     TA += p*0.5
     SL += n*0.5 
@@ -124,11 +124,11 @@ def final(df, opens):
         SL = current_month[current_month['result dummy']=='SL Hit'].shape[0]
         
         # (+)ive & (-)ive STAGNANT alerts
-        n1 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bullish') & (current_month['15DayClose']<current_month.Price)].shape[0]
-        p1 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bullish') & (current_month['15DayClose']>current_month.Price)].shape[0]
+        n1 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bullish') & (current_month['Trade Closed at']<current_month.Price)].shape[0]
+        p1 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bullish') & (current_month['Trade Closed at']>current_month.Price)].shape[0]
 
-        n2 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bearish') & (current_month['15DayClose']>current_month.Price)].shape[0]
-        p2 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bearish') & (current_month['15DayClose']<current_month.Price)].shape[0]
+        n2 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bearish') & (current_month['Trade Closed at']>current_month.Price)].shape[0]
+        p2 = current_month[(current_month['result dummy']=='STAGNANT') & (current_month.Type=='Bearish') & (current_month['Trade Closed at']<current_month.Price)].shape[0]
 
         p = p1 + p2
         n = n1 + n2
