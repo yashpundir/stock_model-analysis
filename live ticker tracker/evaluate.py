@@ -155,7 +155,7 @@ def evaluate_active_bull(df, ind, row, sres, ores, fres):
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low
         df.loc[ind, 'Exit Price OPT'] = ores[3]                                    
         df.loc[ind, 'Exit Price FUT'] = fres[2]
-        df.loc[ind, 'Trade Closed at'] = sres[4]   
+        df.loc[ind, 'Trade Closed at'] = sres[2]   
         df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                        
 
     else:                                                                         # check SL Hit or not
@@ -163,7 +163,7 @@ def evaluate_active_bull(df, ind, row, sres, ores, fres):
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT'] = ores[2]
             df.loc[ind, 'Exit Price FUT'] = fres[3]
-            df.loc[ind, 'Trade Closed at'] = sres[4]    
+            df.loc[ind, 'Trade Closed at'] = sres[3]    
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                       
     
     # Calculate P&L
@@ -199,7 +199,7 @@ def evaluate_active_bear(df, ind, row, sres, ores, fres):
         df.loc[ind, 'Status'] = 'T1 Hit'                           # [2] => high
         df.loc[ind, 'Exit Price OPT'] = ores[3]                    
         df.loc[ind, 'Exit Price FUT'] = fres[3]
-        df.loc[ind, 'Trade Closed at'] = sres[4]    
+        df.loc[ind, 'Trade Closed at'] = sres[3]    
         df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                      
 
     else:
@@ -207,7 +207,7 @@ def evaluate_active_bear(df, ind, row, sres, ores, fres):
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT'] = ores[2]
             df.loc[ind, 'Exit Price FUT'] = fres[2]          
-            df.loc[ind, 'Trade Closed at'] = sres[4]      
+            df.loc[ind, 'Trade Closed at'] = sres[2]      
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                     
     
     # Calculate P&L
@@ -261,7 +261,7 @@ def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                                    
         df.loc[ind, 'Exit Price OPT2'] = o2res[2]           
-        df.loc[ind, 'Trade Closed at'] = sres[4]
+        df.loc[ind, 'Trade Closed at'] = sres[2]
         df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                           
 
     else:
@@ -269,7 +269,7 @@ def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT1'] = ores[3]
             df.loc[ind, 'Exit Price OPT2'] = o2res[3]
-            df.loc[ind, 'Trade Closed at'] = sres[4]
+            df.loc[ind, 'Trade Closed at'] = sres[3]
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                           
 
     
@@ -307,7 +307,7 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
         df.loc[ind, 'Status'] = 'T1 Hit'                           # [2] => high
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                     
         df.loc[ind, 'Exit Price OPT2'] = o2res[2] 
-        df.loc[ind, 'Trade Closed at'] = sres[4]  
+        df.loc[ind, 'Trade Closed at'] = sres[3]  
         df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                         
 
     else:
@@ -315,7 +315,7 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
         if df.loc[ind, 'Status'] == 'SL Hit':
             df.loc[ind, 'Exit Price OPT1'] = ores[3]
             df.loc[ind, 'Exit Price OPT2'] = o2res[3]
-            df.loc[ind, 'Trade Closed at'] = sres[4] 
+            df.loc[ind, 'Trade Closed at'] = sres[2] 
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                          
     
     # Calculate P&L
@@ -349,16 +349,17 @@ def master2(df):
 
 def update_status2(df):
     for i, row in df.iterrows():
-        today = dt.date.today()
-        trigger = dt.datetime.strptime(row['Trigger Date'], '%d/%m/%Y').date()
-        offset = today - trigger 
-        if offset.days>=21  and dt.datetime.now().time() > dt.time(10, 0):
-            if row['Status'] in ['T1 Hit', 'SL Hit']:
-                df.loc[i, 'Status'] = f"Expired-{row['Status']}"
-            else:
-                df.loc[i, 'Status'] = f"Expired-Stagnant"
-                df.loc[i, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')  
-                df.loc[i, 'Trade Closed at'] = row['Stock CMP']
+        if row["Status"][:7]!='Expired':
+            today = dt.date.today()
+            trigger = dt.datetime.strptime(row['Trigger Date'], '%d/%m/%Y').date()
+            offset = today - trigger 
+            if offset.days==21  and dt.datetime.now().time() > dt.time(10, 0):
+                if row['Status'] in ['T1 Hit', 'SL Hit']:
+                    df.loc[i, 'Status'] = f"Expired-{row['Status']}"
+                else:
+                    df.loc[i, 'Status'] = f"Expired-Stagnant"
+                    df.loc[i, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')  
+                    df.loc[i, 'Trade Closed at'] = row['Stock CMP']
 
 def fetch_candles2(row, today):
     now = dt.datetime.today()
