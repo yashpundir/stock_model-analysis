@@ -21,10 +21,7 @@
 
 # stock_cmp                                                 
 # fut_cmp
-# opt_cmp
-# opt_plue                                    |    (CMP - entry)
-# fut_plue                                    |    (CMP - entry)
-# total_plue                                  |    opt_plue + fut_plue
+# opt_cmp   
 
 # -----Based on Status-----
 
@@ -45,10 +42,6 @@
 # stock_cmp                                                 
 # fut_cmp
 # opt_cmp
-# opt_plue                                    |    (CMP - entry)
-# fut_plue                                    |    (entry - CMP)
-# total_plue                                  |    opt_plue + fut_plue
-
 
 # -----Based on Status ----
 
@@ -105,14 +98,9 @@
 # (Assuming Bullish)
 # Buy Call + Sell Call
 
-# ----Irrespective of Status (UE)---                            
-
 # stock_cmp                                                 
 # opt1_cmp
 # opt2_cmp
-# opt1_plue                                    |    (CMP - entry)
-# opt2_plue                                    |    (entry - CMP)
-# total_plue                                   |    opt_plue + fut_plue
 
 # -----Based on Status-----
 
@@ -125,20 +113,12 @@
 # --> total_pl                                 |    opt1_pl + opt2_pl
 
 
-
-
-
 # (Assuming Bearish)
 # Buy Put + Sell Put
-
-# ----Irrespective of Status (UE) --                            
 
 # stock_cmp                                                 
 # opt1_cmp
 # opt2_cmp
-# opt1_plue                                    |    (CMP - entry)
-# opt2_plue                                    |    (entry - CMP)
-# total_plue                                   |    opt_plue + fut_plue
 
 
 # -----Based on Status ----

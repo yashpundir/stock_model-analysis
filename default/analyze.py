@@ -15,7 +15,6 @@ scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/aut
 
 gc = gspread.service_account(filename='creds.json',scopes=scope)
 
-
 sheets = {'Strategy1':'', 'Strategy2':'', 'Illiquid':'', 'NCASH':'', 'Other':'', 'RTP':''}
 for sheet in sheets:
     sheet1 = gc.open('FnO_Tracker').worksheet(sheet)                           # Get Sheet
@@ -36,14 +35,14 @@ df.drop_duplicates(inplace=True)
 df.sort_values(by='Trigger Date', axis=0, inplace=True, ascending=False)         # maybe not needed
 df.insert(0, 'What', 'FO')
 df.reset_index(drop=True, inplace=True)
-NoD = [((dt.datetime.strptime(row['Closing day'], '%d/%m/%Y')).date() - row['Trigger Date'].date()).days+1 if row['Closing day']!='' else 0 for i,row in df.iterrows()]
+NoD = [((dt.datetime.strptime(row['Closing day'], '%d/%m/%Y')).date() - row['Trigger Date'].date()).days+1 if row['Closing day']!='' else 0 for i,row in df.iterrows()] # If trade closed, calculate NoD, else if trade is active, NoD=0
 df['Closing day'] = NoD
 df.rename(columns={'Status':'Result','Trigger Date':'Date','Trigger Price':'Price','SL':'SL1', 'Closing day':'NoD'}, inplace=True)
 result_dummy = df.Result.map({'T1 Hit':'Target achieved', 'SL Hit':'SL Hit', 'SL Zone':'ON', 'ACTIVE':'ON', 'Expired-T1 Hit':'Target achieved', 'Expired-SL Hit':'SL Hit', 'Expired-Stagnant':'STAGNANT'})
 df.insert(df.shape[-1], 'result dummy', result_dummy)
 df = df[['What','Type', 'Date', 'Stock', 'Price', 'SL1', 'T1', 'Result', 'Trade Closed at', 'NoD', 'result dummy']]
 
-#d Data formatting for NCASH, Other, RTP
+# Data formatting for NCASH, Other, RTP
 df4 = sheets['NCASH']
 df5 = sheets['Other']
 df6 = sheets['RTP']

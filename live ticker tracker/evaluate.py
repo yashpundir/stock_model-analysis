@@ -17,10 +17,6 @@ fyers = fyersModel.FyersModel(client_id=client_id, token=access_token, log_path=
 
 logging.basicConfig(filename='log.txt', format='\n%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%d-%b-%y %H:%M:%S')
 
-
-def get_active_data(df):
-    return df[df.Status.isin(['ACTIVE','T1 Hit','SL Hit','SL Zone'])]
-
 def update_status(df):
     for i, row in df.iterrows():
         if dt.date.today() == dt.datetime.strptime(row['Expiry'], '%d%b%Y').date() and dt.datetime.now().time() > dt.time(10, 0):
@@ -124,7 +120,7 @@ def master(df):
 
     for ind, row in df.iterrows():
         try:
-            if row["Status"][:7]!='Expired':
+            if row["Status"] in ['ACTIVE','SL Zone']:
                 if row['Type']=='Bullish':
                     get_bull(df, ind, row, today)
                 else:
@@ -141,16 +137,8 @@ def get_bull(df, ind, row, today):
     df.loc[ind, 'Stock CMP'] = sres[4]
     df.loc[ind, 'Current Price OPT'] = ores[4]
     df.loc[ind, 'Current Price FUT'] = fres[4]
-    df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
-    df.loc[ind, 'P&L FUT (UE)'] = (fres[4] - row['Entry Price FUT']) * row['Lot Size']
-    df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
     
-    # update if alert is active
-    if row['Status'] in ['ACTIVE','SL Zone']:
-        evaluate_active_bull(df, ind, row, sres, ores, fres)
-        
-def evaluate_active_bull(df, ind, row, sres, ores, fres):
-    # check/update status
+    # Check if T1/SL Hit
     if sres[2] >= row['T1']:                                                       # [2] => high
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low
         df.loc[ind, 'Exit Price OPT'] = ores[3]                                    
@@ -167,9 +155,9 @@ def evaluate_active_bull(df, ind, row, sres, ores, fres):
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                       
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':       # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT'] = df.loc[ind, 'P&L OPT (UE)']
-        df.loc[ind, 'P&L FUT'] = df.loc[ind, 'P&L FUT (UE)']                  
+    if df.loc[ind, 'Status']in ['ACTIVE','SL Zone']:                              # If T1/SL is still not hit
+        df.loc[ind, 'P&L OPT'] = ores[4] - df.loc[ind, 'Entry Price OPT']         # CMP - entry
+        df.loc[ind, 'P&L FUT'] = fres[4] - df.loc[ind, 'Entry Price FUT']         # CMP - entry         
 
     else:                                                                          # If T1/SL hit, calculate P&L based on exit price
         df.loc[ind, 'P&L OPT'] = (df.loc[ind, 'Exit Price OPT'] - row['Entry Price OPT']) * row['Lot Size']                 
@@ -185,16 +173,8 @@ def get_bear(df, ind, row, today):
     df.loc[ind, 'Stock CMP'] = sres[4] 
     df.loc[ind, 'Current Price OPT'] = ores[4]
     df.loc[ind, 'Current Price FUT'] = fres[4]
-    df.loc[ind, 'P&L OPT (UE)'] = (ores[4] - row['Entry Price OPT']) * row['Lot Size']
-    df.loc[ind, 'P&L FUT (UE)'] = (row['Entry Price FUT'] - fres[4]) * row['Lot Size']
-    df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT (UE)'] + df.loc[ind, 'P&L FUT (UE)']
     
-    # update if alert is active
-    if row['Status'] in ['ACTIVE','SL Zone']:
-        evaluate_active_bear(df, ind, row, sres, ores, fres)
-        
-def evaluate_active_bear(df, ind, row, sres, ores, fres):
-    # check/update status
+    # Check if T1/SL Hit
     if sres[3] <= row['T1']:                                       # [3] => low 
         df.loc[ind, 'Status'] = 'T1 Hit'                           # [2] => high
         df.loc[ind, 'Exit Price OPT'] = ores[3]                    
@@ -211,9 +191,9 @@ def evaluate_active_bear(df, ind, row, sres, ores, fres):
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                     
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':       # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT'] = df.loc[ind, 'P&L OPT (UE)']
-        df.loc[ind, 'P&L FUT'] = df.loc[ind, 'P&L FUT (UE)']                
+    if df.loc[ind, 'Status'] in ['ACTIVE','SL Zone']:                             # If T1/SL is still not hit
+        df.loc[ind, 'P&L OPT'] = ores[4] - df.loc[ind, 'Entry Price OPT']         # CMP - entry
+        df.loc[ind, 'P&L FUT'] = df.loc[ind, 'Entry Price FUT']  - fres[4]        # entry - CMP
 
     else:                                                                          # If T1/SL hit, calculate P&L based on exit price
         df.loc[ind, 'P&L OPT'] = (df.loc[ind, 'Exit Price OPT'] - row['Entry Price OPT']) * row['Lot Size']                   
@@ -230,7 +210,7 @@ def Master(df):
     
     for ind, row in df.iterrows():
         try:
-            if row["Status"][:7]!='Expired':
+            if row["Status"] in ['ACTIVE','SL Zone']:
                 if row['Type']=='Bullish':
                     Get_bull(df, ind, row, today)
                 else:
@@ -247,16 +227,8 @@ def Get_bull(df, ind, row, today):
     df.loc[ind, 'Stock CMP'] = sres[4]
     df.loc[ind, 'Current Price OPT1'] = ores[4]
     df.loc[ind, 'Current Price OPT2'] = o2res[4]
-    df.loc[ind, 'P&L OPT1 (UE)'] = (ores[4] - row['Entry Price OPT1']) * row['Lot Size']
-    df.loc[ind, 'P&L OPT2 (UE)'] = (row['Entry Price OPT2'] - o2res[4]) * row['Lot Size']
-    df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT1 (UE)'] + df.loc[ind, 'P&L OPT2 (UE)']
     
-    # update if alert is active
-    if row['Status'] in ['ACTIVE','SL Zone']:
-        Evaluate_active_bull(df, ind, row, sres, ores, o2res)
-        
-def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
-    # check/update status
+    # Check if T1/SL Hit
     if sres[2] >= row['T1']:                                                       # [2] => high
         df.loc[ind, 'Status'] = 'T1 Hit'                                           # [3] => low
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                                    
@@ -272,11 +244,10 @@ def Evaluate_active_bull(df, ind, row, sres, ores, o2res):
             df.loc[ind, 'Trade Closed at'] = sres[3]
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                           
 
-    
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':      # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT1'] = df.loc[ind, 'P&L OPT1 (UE)']
-        df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'P&L OPT2 (UE)']                  
+    if df.loc[ind, 'Status'] in ['ACTIVE','SL Zone']:                           # If T1/SL is still not hit
+        df.loc[ind, 'P&L OPT1'] = ores[4] - df.loc[ind, 'Entry Price OPT1']     # CMP - entry
+        df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'Entry Price OPT2'] - o2res[4]    # entry - CMP              
 
     else:                                                                          # If T1/SL hit
         df.loc[ind, 'P&L OPT1'] = (df.loc[ind, 'Exit Price OPT1'] - row['Entry Price OPT1']) * row['Lot Size']                 
@@ -292,17 +263,8 @@ def Get_bear(df, ind, row, today):
     df.loc[ind, 'Stock CMP'] = sres[4] 
     df.loc[ind, 'Current Price OPT1'] = ores[4]
     df.loc[ind, 'Current Price OPT2'] = o2res[4]
-    df.loc[ind, 'P&L OPT1 (UE)'] = (ores[4] - row['Entry Price OPT1']) * row['Lot Size']
-    df.loc[ind, 'P&L OPT2 (UE)'] = (row['Entry Price OPT2'] - o2res[4]) * row['Lot Size']
-    df.loc[ind, 'Total P&L (UE)'] = df.loc[ind, 'P&L OPT1 (UE)'] + df.loc[ind, 'P&L OPT2 (UE)']
     
-    # update if alert is active
-    if row['Status'] in ['ACTIVE','SL Zone']:
-        Evaluate_active_bear(df, ind, row, sres, ores, o2res)
-        
-def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
-    
-    # check/update status
+    # Check if T1/SL Hit
     if sres[3] <= row['T1']:                                       # [3] => low
         df.loc[ind, 'Status'] = 'T1 Hit'                           # [2] => high
         df.loc[ind, 'Exit Price OPT1'] = ores[2]                     
@@ -319,9 +281,9 @@ def Evaluate_active_bear(df, ind, row, sres, ores, o2res):
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                          
     
     # Calculate P&L
-    if df.loc[ind, 'Status']=='ACTIVE' or df.loc[ind, 'Status']=='SL Zone':      # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT1'] = df.loc[ind, 'P&L OPT1 (UE)']
-        df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'P&L OPT2 (UE)']                 
+    if df.loc[ind, 'Status'] in ['ACTIVE','SL Zone']:      # If T1/SL is still not hit
+        df.loc[ind, 'P&L OPT1'] = ores[4] - df.loc[ind, 'Entry Price OPT1']      # CMP - entry
+        df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'Entry Price OPT2'] - o2res[4]     # entry - CMP
 
     else:                                                                          # If T1/SL hit
         df.loc[ind, 'P&L OPT1'] = (df.loc[ind, 'Exit Price OPT1'] - row['Entry Price OPT1']) * row['Lot Size']                   
@@ -380,7 +342,6 @@ def fetch_candles2(row, today):
 
     # index the required candle
     sres = hs[np.where(np.array(hs) == epoch)[0][0]]
-
     return sres
 
 def get_bull2(df, ind, row, today):
