@@ -155,9 +155,9 @@ def get_bull(df, ind, row, today):
             df.loc[ind, 'Closing day'] = dt.datetime.strftime(dt.date.today(), '%d/%m/%Y')                       
     
     # Calculate P&L
-    if df.loc[ind, 'Status']in ['ACTIVE','SL Zone']:                              # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT'] = ores[4] - df.loc[ind, 'Entry Price OPT']         # CMP - entry
-        df.loc[ind, 'P&L FUT'] = fres[4] - df.loc[ind, 'Entry Price FUT']         # CMP - entry         
+    if df.loc[ind, 'Status']in ['ACTIVE','SL Zone']:                                                # If T1/SL is still not hit
+        df.loc[ind, 'P&L OPT'] = (ores[4] - df.loc[ind, 'Entry Price OPT']) * row['Lot Size']        # CMP - entry
+        df.loc[ind, 'P&L FUT'] = (fres[4] - df.loc[ind, 'Entry Price FUT']) * row['Lot Size']         # CMP - entry         
 
     else:                                                                          # If T1/SL hit, calculate P&L based on exit price
         df.loc[ind, 'P&L OPT'] = (df.loc[ind, 'Exit Price OPT'] - row['Entry Price OPT']) * row['Lot Size']                 
@@ -192,8 +192,8 @@ def get_bear(df, ind, row, today):
     
     # Calculate P&L
     if df.loc[ind, 'Status'] in ['ACTIVE','SL Zone']:                             # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT'] = ores[4] - df.loc[ind, 'Entry Price OPT']         # CMP - entry
-        df.loc[ind, 'P&L FUT'] = df.loc[ind, 'Entry Price FUT']  - fres[4]        # entry - CMP
+        df.loc[ind, 'P&L OPT'] = (ores[4] - df.loc[ind, 'Entry Price OPT']) * row['Lot Size']         # CMP - entry
+        df.loc[ind, 'P&L FUT'] = (df.loc[ind, 'Entry Price FUT']  - fres[4]) * row['Lot Size']       # entry - CMP
 
     else:                                                                          # If T1/SL hit, calculate P&L based on exit price
         df.loc[ind, 'P&L OPT'] = (df.loc[ind, 'Exit Price OPT'] - row['Entry Price OPT']) * row['Lot Size']                   
@@ -246,8 +246,8 @@ def Get_bull(df, ind, row, today):
 
     # Calculate P&L
     if df.loc[ind, 'Status'] in ['ACTIVE','SL Zone']:                           # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT1'] = ores[4] - df.loc[ind, 'Entry Price OPT1']     # CMP - entry
-        df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'Entry Price OPT2'] - o2res[4]    # entry - CMP              
+        df.loc[ind, 'P&L OPT1'] = (ores[4] - df.loc[ind, 'Entry Price OPT1']) * row['Lot Size']     # CMP - entry
+        df.loc[ind, 'P&L OPT2'] = (df.loc[ind, 'Entry Price OPT2'] - o2res[4]) * row['Lot Size']    # entry - CMP              
 
     else:                                                                          # If T1/SL hit
         df.loc[ind, 'P&L OPT1'] = (df.loc[ind, 'Exit Price OPT1'] - row['Entry Price OPT1']) * row['Lot Size']                 
@@ -282,8 +282,8 @@ def Get_bear(df, ind, row, today):
     
     # Calculate P&L
     if df.loc[ind, 'Status'] in ['ACTIVE','SL Zone']:      # If T1/SL is still not hit
-        df.loc[ind, 'P&L OPT1'] = ores[4] - df.loc[ind, 'Entry Price OPT1']      # CMP - entry
-        df.loc[ind, 'P&L OPT2'] = df.loc[ind, 'Entry Price OPT2'] - o2res[4]     # entry - CMP
+        df.loc[ind, 'P&L OPT1'] = (ores[4] - df.loc[ind, 'Entry Price OPT1']) * row['Lot Size']      # CMP - entry
+        df.loc[ind, 'P&L OPT2'] = (df.loc[ind, 'Entry Price OPT2'] - o2res[4]) * row['Lot Size']     # entry - CMP
 
     else:                                                                          # If T1/SL hit
         df.loc[ind, 'P&L OPT1'] = (df.loc[ind, 'Exit Price OPT1'] - row['Entry Price OPT1']) * row['Lot Size']                   
